@@ -9,4 +9,9 @@ namespace gantt_server.Models
     {
         Created, Available, InProgress, Done, Cancelled
     }
+
+    public enum TeamRole
+    { 
+        Member, Leader 
+    }
 }
