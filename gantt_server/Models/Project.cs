@@ -6,7 +6,7 @@ namespace gantt_server.Models
         public required string Name { get; set; }
         public string? Description { get; set; }
         public required string Subject { get; set; }
-        public DateOnly Deadline { get; set; }
+        public DateTime FinalDeadline { get; set; }
         public ProjectStatus Status { get; set; } = ProjectStatus.Planned;
 
         public Guid TeamId { get; set; }
