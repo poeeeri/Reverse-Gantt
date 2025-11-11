@@ -8,6 +8,5 @@ namespace gantt_server.Models
         public string? Email { get; set; }
 
         public ICollection<Executor> Executors { get; set; } = new List<Executor>();
-        public ICollection<ProjectTask> ProjectTasks { get; set; } = new List<ProjectTask>();
     }
 }
