@@ -54,6 +54,25 @@ namespace gantt_server.Services
             await _db.SaveChangesAsync(ct);
             return true;
         }
+        public async Task<StudentReadDto> EnsureStudent(EnsureStudentDto dto, CancellationToken ct)
+        {
+            var email = dto.Email?.Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("Email is required", nameof(dto.Email));
+
+            var existing = await _db.Students
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Email == email, ct);
+
+            if (existing is not null)
+                return existing.ToReadDto();
+
+            var entity = dto.ToCreate();
+            _db.Students.Add(entity);
+            await _db.SaveChangesAsync(ct);
+
+            return entity.ToReadDto();
+        }
     }
     public sealed class StudentConflictException : Exception
     {

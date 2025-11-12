@@ -61,5 +61,12 @@ namespace gantt_server.Controllers
             var ok = await _studentService.DeleteStudent(id, ct);
             return ok ? NoContent() : NotFound();
         }
+
+        [HttpPost("ensure")]
+        public async Task<ActionResult<StudentReadDto>> Ensure([FromBody] EnsureStudentDto dto, CancellationToken ct)
+        {
+            var student = await _studentService.EnsureStudent(dto, ct);
+            return Ok(student);
+        }
     }
 }

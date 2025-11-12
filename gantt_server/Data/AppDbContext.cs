@@ -109,7 +109,7 @@ namespace gantt_server.Data
                     j => j.HasOne<Executor>().WithMany().HasForeignKey("ExecutorId")
                         .OnDelete(DeleteBehavior.Cascade),
                     j => j.HasOne<ProjectTask>().WithMany().HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade),
+                        .OnDelete(DeleteBehavior.Restrict),
                     j =>
                     {
                         j.ToTable("TaskExecutors");
