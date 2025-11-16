@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
+import { register } from '../../api/auth';
 import './Auth.css';
 
-const Register = ({ onToggleForm }) => {
+const Register = ({ onToggleForm, onAuth }) => {
     const [formData, setFormData] = useState({
         name: '',
+        lastName: '',
         email: '',
         password: '',
         confirmPassword: ''
     });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const handleChange = (e) => {
         setFormData({
@@ -16,14 +20,27 @@ const Register = ({ onToggleForm }) => {
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
         if (formData.password !== formData.confirmPassword) {
-            alert('Пароли не совпадают!');
+            setError('Пароли не совпадают!');
             return;
         }
-        console.log('Register data:', formData);
-        // логика регистрации
+
+        setLoading(true);
+        try {
+            const data = await register(formData);
+            const student = data.student ?? data.Student;
+            onAuth({
+                token: data.token ?? data.Token,
+                student
+            });
+        } catch (err) {
+            setError(err.message || 'Ошибка регистрации');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -37,6 +54,17 @@ const Register = ({ onToggleForm }) => {
                             name="name"
                             placeholder="Имя"
                             value={formData.name}
+                            onChange={handleChange}
+                            required
+                            className="auth-input"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <input
+                            type="text"
+                            name="lastName"
+                            placeholder="Фамилия"
+                            value={formData.lastName}
                             onChange={handleChange}
                             required
                             className="auth-input"
@@ -75,7 +103,10 @@ const Register = ({ onToggleForm }) => {
                             className="auth-input"
                         />
                     </div>
-                    <button type="submit" className="auth-button">Зарегистрироваться</button>
+                    {error && <p className="error">{error}</p>}
+                    <button type="submit" className="auth-button" disabled={loading}>
+                        {loading ? 'Регистрация...' : 'Зарегистрироваться'}
+                    </button>
                 </form>
                 <p className="auth-toggle">
                     Уже есть аккаунт? <span onClick={onToggleForm}>Войти</span>
