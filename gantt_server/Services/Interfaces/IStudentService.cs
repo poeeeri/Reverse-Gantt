@@ -9,6 +9,6 @@ namespace gantt_server.Services.Interfaces
         Task<StudentReadDto> CreateStudent(StudentCreateDto dto, CancellationToken ct);
         Task<StudentReadDto?> PatchStudent(Guid id, StudentPatchDto dto, CancellationToken ct);
         Task<bool> DeleteStudent(Guid id, CancellationToken ct);
-        Task<StudentReadDto> EnsureStudent(EnsureStudentDto dto, CancellationToken ct);
-    }   
+        Task<StudentReadDto?> GetMeAsync(Guid studentId, CancellationToken ct);
+    }
 }

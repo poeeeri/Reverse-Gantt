@@ -26,7 +26,19 @@ namespace gantt_server.Data
 
         private static void OnModelStudentCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Student>().ToTable("Students");
+            modelBuilder.Entity<Student>(b =>
+            {
+                b.ToTable("Students");
+                b.HasKey(s => s.Id);
+
+                b.Property(s => s.FirstName).IsRequired();
+                b.Property(s => s.LastName).IsRequired();
+                b.Property(s => s.Email).IsRequired();
+                b.Property(s => s.PasswordHash).IsRequired();
+                b.Property(s => s.CreatedAt).IsRequired();
+
+                b.HasIndex(s => s.Email).IsUnique();
+            });
         }
 
         private static void OnModelTeamCreating(ModelBuilder modelBuilder)
@@ -43,7 +55,7 @@ namespace gantt_server.Data
 
             modelBuilder.Entity<Executor>()
                 .HasOne(e => e.Student)
-                .WithMany()
+                .WithMany(s => s.Executors)
                 .HasForeignKey(e => e.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
 

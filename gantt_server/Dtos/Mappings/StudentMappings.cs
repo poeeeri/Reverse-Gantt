@@ -1,6 +1,6 @@
+using System.Globalization;
 using gantt_server.Dtos.StudentDtos;
 using gantt_server.Models;
-using System.Globalization;
 
 namespace gantt_server.Mappings
 {
@@ -18,25 +18,6 @@ namespace gantt_server.Mappings
         public static IEnumerable<StudentReadDto> ToReadDtos(this IEnumerable<Student> src) =>
             src.Select(ToReadDto);
 
-        public static Student ToCreate(this StudentCreateDto dto) => new()
-        {
-            Id = Guid.NewGuid(),
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            Email = dto.Email
-        };
-
-        public static Student ToCreate(this EnsureStudentDto dto) => new()
-        {
-            Id = Guid.NewGuid(),
-            FirstName = string.IsNullOrWhiteSpace(dto.FirstName) ? "Student" : dto.FirstName,
-            LastName = dto.LastName ?? string.Empty,
-            Email = NormalizeEmail(dto.Email)
-        };
-
-        private static string NormalizeEmail(string email) =>
-            email?.Trim().ToLower(CultureInfo.InvariantCulture) ?? string.Empty;
-
         public static void Apply(this Student entity, StudentPatchDto dto)
         {
             if (dto.FirstName is not null)
@@ -46,8 +27,10 @@ namespace gantt_server.Mappings
                 entity.LastName = dto.LastName;
 
             if (dto.Email is not null)
-                entity.Email = dto.Email;
+                entity.Email = NormalizeEmail(dto.Email);
         }
+
+        public static string NormalizeEmail(string? email) =>
+            (email ?? string.Empty).Trim().ToLower(CultureInfo.InvariantCulture);
     }
 }
-
