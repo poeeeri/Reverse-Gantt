@@ -5,12 +5,12 @@ namespace gantt_server.Models
         Planned, InProgress, Done
     }
 
-    public enum TaskStatus
+    public enum ProjectTaskStatus
     {
         Created, Available, InProgress, Done, Cancelled
     }
 
-    public enum TeamRole
+    public enum ExecutorRole
     { 
         Member, Leader 
     }
