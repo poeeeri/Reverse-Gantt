@@ -19,6 +19,7 @@ body {
     font-size: 2rem;
     margin-bottom: 10px;
     color: #cc1d49;
+    text-align: left;
 }
 
 .dashboard-subtitle {
