@@ -5,12 +5,7 @@ export const setToken = (token) => localStorage.setItem('token', token);
 export const clearToken = () => localStorage.removeItem('token');
 
 export async function apiFetch(path, options = {}) {
-    const {
-        method = 'GET',
-        headers = {},
-        body,
-        ...rest
-    } = options;
+    const { method = 'GET', headers = {}, body, ...rest } = options;
 
     const finalHeaders = { ...headers };
     const token = getToken();
@@ -44,9 +39,12 @@ export async function apiFetch(path, options = {}) {
     const data = isJson ? await response.json() : await response.text();
 
     if (!response.ok) {
-        let message = 'Ошибка запроса';
-        throw new Error(message);
+        throw new Error(data?.message || 'Ошибка запроса');
     }
 
     return data;
 }
+
+export const login = (credentials) => apiFetch('/auth/login', { method: 'POST', body: credentials });
+export const register = (userData) => apiFetch('/auth/register', { method: 'POST', body: userData });
+export const getMe = () => apiFetch('/auth/me', { method: 'GET' });

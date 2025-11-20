@@ -24,10 +24,10 @@ const Login = ({ onToggleForm, onAuth }) => {
         try {
             const data = await login(formData);
             const student = data.student ?? data.Student;
-            onAuth({
-                token: data.token ?? data.Token,
-                student
-            });
+            const token = data.token ?? data.Token;
+
+            localStorage.setItem('token', token);
+            onAuth({ student, token });
         } catch (err) {
             setError(err.message || 'Ошибка авторизации');
         } finally {
