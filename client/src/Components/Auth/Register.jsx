@@ -20,28 +20,29 @@ const Register = ({ onToggleForm, onAuth }) => {
         });
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        if (formData.password !== formData.confirmPassword) {
-            setError('Пароли не совпадают!');
-            return;
-        }
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (formData.password !== formData.confirmPassword) {
+        setError('Пароли не совпадают!');
+        return;
+    }
 
-        setLoading(true);
-        try {
-            const data = await register(formData);
-            const student = data.student ?? data.Student;
-            onAuth({
-                token: data.token ?? data.Token,
-                student
-            });
-        } catch (err) {
-            setError(err.message || 'Ошибка регистрации');
-        } finally {
-            setLoading(false);
-        }
-    };
+    setLoading(true);
+    try {
+        const data = await register(formData);
+        const student = data.student ?? data.Student;
+        const token = data.token ?? data.Token;
+
+        localStorage.setItem('token', token);
+
+        onAuth({ student, token });
+    } catch (err) {
+        setError(err.message || 'Ошибка регистрации');
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <div className="auth-container">

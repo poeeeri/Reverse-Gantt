@@ -1,0 +1,137 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+.dashboard-container {
+    padding: 20px;
+    color: #cc1d49;
+}
+
+.dashboard-header {
+    background: #ffe9ef;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #ffc9d7;
+    margin-bottom: 25px;
+}
+
+.dashboard-title {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    color: #cc1d49;
+}
+
+.dashboard-subtitle {
+    font-size: 1.1rem;
+    color: #a3163a;
+    margin-bottom: 20px;
+}
+
+.dashboard-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.dash-btn {
+    padding: 12px 18px;
+    background: #ffc9d7;
+    border: none;
+    border-radius: 10px;
+    text-decoration: none;
+    color: #cc1d49;
+    font-weight: 600;
+    transition: 0.2s;
+    text-align: center;
+}
+
+.dash-btn:hover {
+    background: #ffb3c4;
+    color: white;
+}
+
+.dashboard-content {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.projects-section {
+    flex: 2;
+}
+
+.projects-section h2 {
+    margin-bottom: 15px;
+    font-size: 1.6rem;
+    color: #cc1d49;
+}
+
+.project-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.project-card {
+    display: flex;
+    gap: 20px;
+    background: #ffe9ef;
+    border: 1px solid #ffc9d7;
+    border-radius: 12px;
+    padding: 20px;
+    transition: 0.25s ease;
+}
+
+.project-card:hover {
+    background: #ffd7e1;
+    transform: translateY(-4px);
+}
+
+.progress-circle {
+    min-width: 70px;
+    height: 70px;
+    background: #ffc9d7;
+    color: #cc1d49;
+    font-weight: 700;
+    font-size: 1.2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.project-info h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.project-info p {
+    margin: 6px 0;
+    color: #a3163a;
+}
+
+.days-left {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #cc1d49;
+}
+
+.calendar-section {
+    flex: 1;
+}
+
+.calendar-section h2 {
+    margin-bottom: 15px;
+    font-size: 1.6rem;
+}
+
+.calendar-placeholder {
+    background: #ffe9ef;
+    border: 1px solid #ffc9d7;
+    border-radius: 12px;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a3163a;
+    font-size: 1.2rem;
+}
