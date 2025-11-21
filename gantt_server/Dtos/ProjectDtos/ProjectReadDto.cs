@@ -1,4 +1,5 @@
 using gantt_server.Models;
+using gantt_server.Dtos.ProjectTaskDtos;
 
 namespace gantt_server.Dtos.ProjectDtos
 {
@@ -11,5 +12,6 @@ namespace gantt_server.Dtos.ProjectDtos
         public DateTime FinalDeadline { get; init; }
         public ProjectStatus Status { get; init; }
         public Guid TeamId { get; init; }
+        public IReadOnlyList<ProjectTaskDto> ProjectTasks { get; init; } = Array.Empty<ProjectTaskDto>();
     }
 }
