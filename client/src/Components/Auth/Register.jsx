@@ -20,28 +20,38 @@ const Register = ({ onToggleForm, onAuth }) => {
         });
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        if (formData.password !== formData.confirmPassword) {
-            setError('Пароли не совпадают!');
-            return;
-        }
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    
+    if (formData.password.length < 8) {
+        setError('Пароль должен содержать минимум 8 символов');
+        return;
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+        setError('Пароли не совпадают!');
+        return;
+    }
 
-        setLoading(true);
-        try {
-            const data = await register(formData);
-            const student = data.student ?? data.Student;
-            onAuth({
-                token: data.token ?? data.Token,
-                student
-            });
-        } catch (err) {
+    setLoading(true);
+    try {
+        const data = await register(formData);
+        const student = data.student ?? data.Student;
+        const token = data.token ?? data.Token;
+
+        localStorage.setItem('token', token);
+        onAuth({ student, token });
+    } catch (err) {
+        if (err.errors && Array.isArray(err.errors)) {
+            setError(err.errors.join(', '));
+        } else {
             setError(err.message || 'Ошибка регистрации');
-        } finally {
-            setLoading(false);
         }
-    };
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <div className="auth-container">
