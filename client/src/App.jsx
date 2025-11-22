@@ -20,12 +20,12 @@ function AppWrapper() {
 }
 
 function AuthWrapper({ onAuth }) {
-      const [isLogin, setIsLogin] = useState(true);
-      const toggleForm = () => setIsLogin(prev => !prev);
+    const [isLogin, setIsLogin] = useState(true);
+    const toggleForm = () => setIsLogin(prev => !prev);
 
-      return isLogin
-          ? <Login onAuth={onAuth} onToggleForm={toggleForm} />
-          : <Register onAuth={onAuth} onToggleForm={toggleForm} />;
+    return isLogin
+        ? <Login onAuth={onAuth} onToggleForm={toggleForm} />
+        : <Register onAuth={onAuth} onToggleForm={toggleForm} />;
 }
 
 function App() {
@@ -89,8 +89,8 @@ function App() {
                     } />
                     <Route path="/register" element={
                         <AuthWrapper 
-                              onAuth={handleAuthSuccess} 
-                              onToggleForm={toggleForm} 
+                            onAuth={handleAuthSuccess} 
+                            onToggleForm={toggleForm} 
                         />
                     } />
                 </>
@@ -99,26 +99,26 @@ function App() {
             {user && (
                 <Route element={
                     <ProtectedRoute user={user}>
-                        <MainLayout user={user} onLogout={handleLogout} />
+                        <MainLayout onLogout={handleLogout} />
                     </ProtectedRoute>
                 }>
                     <Route index element={<Dashboard />} />
                     <Route path="/projects" element={<div>Проекты</div>} />
                     <Route path="/tasks" element={<div>Мои задачи</div>} />
                 </Route>
-              )}
+            )}
             
-              {!user && <Route path="*" element={<Navigate to="/login" replace />} />}
-              {user && <Route path="/login" element={<Navigate to="/" replace />} />}
-              {user && <Route path="/register" element={<Navigate to="/" replace />} />}
-            
-              {authError && (
-                  <Route path="*" element={
-                      <div className="error-container">
-                          <p className="error">{authError}</p>
-                      </div>
-                  } />
-              )}
+            {!user && <Route path="*" element={<Navigate to="/login" replace />} />}
+            {user && <Route path="/login" element={<Navigate to="/" replace />} />}
+            {user && <Route path="/register" element={<Navigate to="/" replace />} />}
+        
+            {authError && (
+                <Route path="*" element={
+                    <div className="error-container">
+                        <p className="error">{authError}</p>
+                    </div>
+                } />
+            )}
         </Routes>
     );
 }

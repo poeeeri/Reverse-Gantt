@@ -153,7 +153,7 @@ namespace gantt_server.Services
             return (await QueryWithDetails().AsNoTracking().FirstAsync(t => t.Id == id, ct)).ToDto();
         }
 
-        public async Task<ProjectTaskDto?> AssignExecutorAsync(Guid id, int executorId, CancellationToken ct)
+        public async Task<ProjectTaskDto?> AssignExecutorAsync(Guid id, Guid executorId, CancellationToken ct)
         {
             var task = await _db.ProjectTasks
                 .Include(t => t.Executors)
@@ -175,7 +175,7 @@ namespace gantt_server.Services
             return (await QueryWithDetails().AsNoTracking().FirstAsync(t => t.Id == id, ct)).ToDto();
         }
 
-        public async Task<ProjectTaskDto?> UnassignExecutorAsync(Guid id, int executorId, CancellationToken ct)
+        public async Task<ProjectTaskDto?> UnassignExecutorAsync(Guid id, Guid executorId, CancellationToken ct)
         {
             var task = await _db.ProjectTasks
                 .Include(t => t.Executors)
@@ -244,7 +244,7 @@ namespace gantt_server.Services
                 task.Dependencies.Add(dep);
         }
 
-        private async Task LoadAndAttachExecutors(ProjectTask task, IList<int>? ids, CancellationToken ct)
+        private async Task LoadAndAttachExecutors(ProjectTask task, IList<Guid>? ids, CancellationToken ct)
         {
             if (ids is null || ids.Count == 0)
                 return;

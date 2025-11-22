@@ -13,7 +13,7 @@ namespace gantt_server.Services.Interfaces
         Task<bool> SetStatusAsync(Guid id, ProjectTaskStatus status, CancellationToken ct);
         Task<ProjectTaskDto?> AddDependencyAsync(Guid id, Guid dependencyId, CancellationToken ct);
         Task<ProjectTaskDto?> RemoveDependencyAsync(Guid id, Guid dependencyId, CancellationToken ct);
-        Task<ProjectTaskDto?> AssignExecutorAsync(Guid id, int executorId, CancellationToken ct);
-        Task<ProjectTaskDto?> UnassignExecutorAsync(Guid id, int executorId, CancellationToken ct);
+        Task<ProjectTaskDto?> AssignExecutorAsync(Guid id, Guid executorId, CancellationToken ct);
+        Task<ProjectTaskDto?> UnassignExecutorAsync(Guid id, Guid executorId, CancellationToken ct);
     }
 }

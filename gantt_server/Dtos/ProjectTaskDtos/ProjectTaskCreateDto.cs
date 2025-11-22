@@ -25,7 +25,7 @@ namespace gantt_server.Dtos.ProjectTaskDtos
 
         public IList<Guid>? DependencyIds { get; set; }
 
-        public IList<int>? ExecutorIds { get; set; }
+        public IList<Guid>? ExecutorIds { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {

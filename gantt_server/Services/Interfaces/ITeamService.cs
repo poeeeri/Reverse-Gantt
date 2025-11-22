@@ -10,6 +10,6 @@ namespace gantt_server.Services.Interfaces
         Task<TeamReadDto?> UpdateAsync(Guid id, TeamUpdateDto dto, CancellationToken ct);
         Task<bool> DeleteAsync(Guid id, CancellationToken ct);
         Task<TeamExecutorDto> AddExecutorAsync(Guid teamId, TeamAddExecutorDto dto, CancellationToken ct);
-        Task<bool> RemoveExecutorAsync(Guid teamId, int executorId, CancellationToken ct);
+        Task<bool> RemoveExecutorAsync(Guid teamId, Guid executorId, CancellationToken ct);
     }
 }

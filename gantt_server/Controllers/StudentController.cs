@@ -65,5 +65,12 @@ namespace gantt_server.Controllers
             var ok = await _studentService.DeleteStudent(id, ct);
             return ok ? NoContent() : NotFound();
         }
+
+        [HttpGet("{id:guid}/tasks")]
+        public async Task<ActionResult<StudentTeamsProjectsDto>> GetTeamsAndTasks(Guid id, CancellationToken ct)
+        {
+            var dto = await _studentService.GetTeamsAndTasks(id, ct);
+            return dto is null ? NotFound() : Ok(dto);
+        }
     }
 }

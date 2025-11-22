@@ -1,5 +1,4 @@
 using gantt_server.Dtos.ProjectTaskDtos;
-using gantt_server.Models;
 using gantt_server.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -73,14 +72,14 @@ namespace gantt_server.Controllers
         }
 
         [HttpPost("tasks/{id:guid}/executors")]
-        public async Task<ActionResult<ProjectTaskDto>> AssignExecutor(Guid id, [FromBody] int executorId, CancellationToken ct)
+        public async Task<ActionResult<ProjectTaskDto>> AssignExecutor(Guid id, [FromBody] Guid executorId, CancellationToken ct)
         {
             var dto = await _projectTaskService.AssignExecutorAsync(id, executorId, ct);
             return dto is null ? NotFound() : Ok(dto);
         }
 
-        [HttpDelete("tasks/{id:guid}/executors/{executorId:int}")]
-        public async Task<ActionResult<ProjectTaskDto>> UnassignExecutor(Guid id, int executorId, CancellationToken ct)
+        [HttpDelete("tasks/{id:guid}/executors/{executorId:guid}")]
+        public async Task<ActionResult<ProjectTaskDto>> UnassignExecutor(Guid id, Guid executorId, CancellationToken ct)
         {
             var dto = await _projectTaskService.UnassignExecutorAsync(id, executorId, ct);
             return dto is null ? NotFound() : Ok(dto);

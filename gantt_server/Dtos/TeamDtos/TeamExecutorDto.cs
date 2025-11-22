@@ -4,7 +4,7 @@ namespace gantt_server.Dtos.TeamDtos
 {
     public sealed class TeamExecutorDto
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public Guid StudentId { get; set; }
         public string StudentName { get; set; } = string.Empty;
         public ExecutorRole Role { get; set; }
