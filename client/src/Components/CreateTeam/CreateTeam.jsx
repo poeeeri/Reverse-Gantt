@@ -78,6 +78,8 @@ const CreateTeamModal = ({ isOpen, onClose, onTeamCreated }) => {
                 },
             });
 
+            let finalTeam = createdTeam;
+
             if (members.length > 0) {
                 const roleToNumber = {
                     'Member': 0,
@@ -95,6 +97,12 @@ const CreateTeamModal = ({ isOpen, onClose, onTeamCreated }) => {
                         body: requestBody,
                     });
                 }
+
+                try {
+                    finalTeam = await apiFetch(`/teams/${createdTeam.Id}`);
+                } catch {
+                    finalTeam = createdTeam;
+                }
             }
 
             alert('Команда успешно создана!');
@@ -106,7 +114,7 @@ const CreateTeamModal = ({ isOpen, onClose, onTeamCreated }) => {
             setSearchResults([]);
             
             if (onTeamCreated) {
-                onTeamCreated(createdTeam);
+                onTeamCreated(finalTeam);
             }
             
             onClose();

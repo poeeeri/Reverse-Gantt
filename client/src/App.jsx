@@ -99,7 +99,7 @@ function App() {
             {user && (
                 <Route element={
                     <ProtectedRoute user={user}>
-                        <MainLayout onLogout={handleLogout} />
+                        <MainLayout user={user} onLogout={handleLogout} />
                     </ProtectedRoute>
                 }>
                     <Route index element={<Dashboard />} />
