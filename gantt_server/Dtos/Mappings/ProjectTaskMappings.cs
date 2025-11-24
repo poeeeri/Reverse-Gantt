@@ -19,7 +19,6 @@ namespace gantt_server.Mappings
             SubtaskIds = task.Subtasks.Select(t => t.Id).ToArray(),
             DependencyIds = task.Dependencies.Select(t => t.Id).ToArray(),
             DependentIds = task.DependentTasks.Select(t => t.Id).ToArray(),
-            ExecutorIds = task.Executors.Select(e => e.Id).ToArray(),
             Executors = task.Executors.Select(e => e.ToDto()).ToArray(),
             AssignedAt = task.AssignedAt
         };

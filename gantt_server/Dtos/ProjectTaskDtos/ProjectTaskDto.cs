@@ -16,7 +16,6 @@ namespace gantt_server.Dtos.ProjectTaskDtos
         public IReadOnlyList<Guid> SubtaskIds { get; init; } = Array.Empty<Guid>();
         public IReadOnlyList<Guid> DependencyIds { get; init; } = Array.Empty<Guid>();
         public IReadOnlyList<Guid> DependentIds { get; init; } = Array.Empty<Guid>();
-        public IReadOnlyList<Guid> ExecutorIds { get; init; } = Array.Empty<Guid>();
         public IReadOnlyList<ProjectTaskExecutorDto> Executors { get; init; } = Array.Empty<ProjectTaskExecutorDto>();
         public DateTime AssignedAt { get; init; }
     }

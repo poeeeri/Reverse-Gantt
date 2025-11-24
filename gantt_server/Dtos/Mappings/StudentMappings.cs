@@ -42,7 +42,7 @@ namespace gantt_server.Mappings
             IEnumerable<ProjectTask> tasks) =>
             new()
             {
-                StudentId = studentId,
+                // StudentId = studentId,
                 Teams = teams.ToReadDtos().ToArray(),
                 Tasks = tasks.Select(t => t.ToDto()).ToArray()
             };
