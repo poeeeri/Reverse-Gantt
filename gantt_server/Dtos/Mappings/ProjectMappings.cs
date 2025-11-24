@@ -1,4 +1,5 @@
 using gantt_server.Dtos.ProjectDtos;
+using gantt_server.Dtos.ProjectTaskDtos;
 using gantt_server.Models;
 
 namespace gantt_server.Mappings
@@ -13,7 +14,8 @@ namespace gantt_server.Mappings
             Subject = project.Subject,
             FinalDeadline = project.FinalDeadline,
             Status = project.Status,
-            TeamId = project.TeamId
+            TeamId = project.TeamId,
+            ProjectTasks = project.Tasks?.Select(t => t.ToDto()).ToArray() ?? Array.Empty<ProjectTaskDto>()
         };
 
         public static IEnumerable<ProjectReadDto> ToReadDtos(this IEnumerable<Project> projects) =>

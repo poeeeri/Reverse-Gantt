@@ -5,7 +5,7 @@ namespace gantt_server.Models
         public Guid Id { get; set; } = Guid.NewGuid();
 
         public Guid ProjectId { get; set; }
-        public required Project Project { get; set; }
+        public Project Project { get; set; } = null!;
 
         public required string Name { get; set; }
         public string? Description { get; set; }

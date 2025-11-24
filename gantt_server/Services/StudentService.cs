@@ -45,14 +45,7 @@ namespace gantt_server.Services
             if (exists)
                 throw new StudentConflictException(new() { ["Email"] = "студент с таким Email уже существует в системе" });
 
-            var student = new Student
-            {
-                Id = Guid.NewGuid(),
-                FirstName = dto.FirstName,
-                LastName = dto.LastName,
-                Email = email,
-                CreatedAt = DateTime.UtcNow
-            };
+            var student = dto.ToEntity(email);
 
             student.PasswordHash = _hasher.HashPassword(student, dto.Password);
 
@@ -99,6 +92,43 @@ namespace gantt_server.Services
                 .FirstOrDefaultAsync(x => x.Id == studentId, ct);
 
             return student?.ToReadDto();
+        }
+
+        public async Task<StudentTeamsProjectsDto?> GetTeamsAndTasks(Guid studentId, CancellationToken ct)
+        {
+            var studentExists = await _db.Students.AsNoTracking().AnyAsync(s => s.Id == studentId, ct);
+            if (!studentExists)
+                return null;
+
+            var teams = await _db.Teams
+                .Where(t => t.Executors.Any(e => e.StudentId == studentId))
+                .Include(t => t.Executors).ThenInclude(e => e.Student)
+                .Include(t => t.Projects)
+                    .ThenInclude(p => p.Tasks)
+                        .ThenInclude(t => t.Subtasks)
+                .Include(t => t.Projects)
+                    .ThenInclude(p => p.Tasks)
+                        .ThenInclude(t => t.Dependencies)
+                .Include(t => t.Projects)
+                    .ThenInclude(p => p.Tasks)
+                        .ThenInclude(t => t.DependentTasks)
+                .Include(t => t.Projects)
+                    .ThenInclude(p => p.Tasks)
+                        .ThenInclude(t => t.Executors)
+                            .ThenInclude(e => e.Student)
+                .AsNoTracking()
+                .ToListAsync(ct);
+
+            var tasks = await _db.ProjectTasks
+                .Include(t => t.Subtasks)
+                .Include(t => t.Dependencies)
+                .Include(t => t.DependentTasks)
+                .Include(t => t.Executors).ThenInclude(e => e.Student)
+                .AsNoTracking()
+                .Where(t => t.Executors.Any(e => e.StudentId == studentId))
+                .ToListAsync(ct);
+
+            return studentId.ToTeamsProjectsDto(teams, tasks);
         }
     }
 

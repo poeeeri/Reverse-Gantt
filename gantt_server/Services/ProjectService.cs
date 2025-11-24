@@ -1,4 +1,5 @@
 using gantt_server.Data;
+using gantt_server.Models;
 using gantt_server.Dtos.ProjectDtos;
 using gantt_server.Mappings;
 using gantt_server.Services.Interfaces;
@@ -14,13 +15,18 @@ namespace gantt_server.Services
 
         public async Task<IReadOnlyList<ProjectReadDto>> GetAllAsync(CancellationToken ct)
         {
-            var projects = await _db.Projects.AsNoTracking().ToListAsync(ct);
-            return projects.ToReadDtos().ToList();
+            var projects = await ProjectsWithTasks()
+                .AsNoTracking()
+                .ToListAsync(ct);
+
+            return projects.Select(p => p.ToReadDto()).ToList();
         }
 
         public async Task<ProjectReadDto?> GetByIdAsync(Guid id, CancellationToken ct)
         {
-            var project = await _db.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id, ct);
+            var project = await ProjectsWithTasks()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id, ct);
             return project?.ToReadDto();
         }
 
@@ -29,7 +35,10 @@ namespace gantt_server.Services
             var entity = dto.ToEntity();
             _db.Projects.Add(entity);
             await _db.SaveChangesAsync(ct);
-            return entity.ToReadDto();
+
+            return (await ProjectsWithTasks()
+                .AsNoTracking()
+                .FirstAsync(p => p.Id == entity.Id, ct)).ToReadDto();
         }
 
         public async Task<ProjectReadDto?> UpdateAsync(Guid id, ProjectUpdateDto dto, CancellationToken ct)
@@ -40,7 +49,8 @@ namespace gantt_server.Services
 
             entity.Apply(dto);
             await _db.SaveChangesAsync(ct);
-            return entity.ToReadDto();
+
+            return await GetByIdAsync(id, ct);
         }
 
         public async Task<bool> DeleteAsync(Guid id, CancellationToken ct)
@@ -53,5 +63,17 @@ namespace gantt_server.Services
             await _db.SaveChangesAsync(ct);
             return true;
         }
+
+        private IQueryable<Project> ProjectsWithTasks() =>
+            _db.Projects
+                .Include(p => p.Tasks)
+                    .ThenInclude(t => t.Subtasks)
+                .Include(p => p.Tasks)
+                    .ThenInclude(t => t.Dependencies)
+                .Include(p => p.Tasks)
+                    .ThenInclude(t => t.DependentTasks)
+                .Include(p => p.Tasks)
+                    .ThenInclude(t => t.Executors)
+                        .ThenInclude(e => e.Student);
     }
 }

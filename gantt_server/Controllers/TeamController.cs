@@ -64,7 +64,7 @@ namespace gantt_server.Controllers
         }
 
         [HttpDelete("{teamId:guid}/executors/{executorId:int}")]
-        public async Task<IActionResult> RemoveExecutor(Guid teamId, int executorId, CancellationToken ct)
+        public async Task<IActionResult> RemoveExecutor(Guid teamId, Guid executorId, CancellationToken ct)
         {
             var ok = await _teamService.RemoveExecutorAsync(teamId, executorId, ct);
             return ok ? NoContent() : NotFound();

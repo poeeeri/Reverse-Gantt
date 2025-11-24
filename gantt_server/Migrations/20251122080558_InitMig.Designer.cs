@@ -12,8 +12,8 @@ using gantt_server.Data;
 namespace gantt_server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251115002430_UserAuth")]
-    partial class UserAuth
+    [Migration("20251122080558_InitMig")]
+    partial class InitMig
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -45,8 +45,8 @@ namespace gantt_server.Migrations
                     b.Property<Guid>("TaskId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("ExecutorId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("ExecutorId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("TaskId", "ExecutorId");
 
@@ -57,11 +57,9 @@ namespace gantt_server.Migrations
 
             modelBuilder.Entity("gantt_server.Models.Executor", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("timestamp with time zone");
