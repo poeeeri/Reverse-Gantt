@@ -1,3 +1,4 @@
+using System.Globalization;
 using gantt_server.Dtos.StudentDtos;
 using gantt_server.Models;
 
@@ -17,14 +18,6 @@ namespace gantt_server.Mappings
         public static IEnumerable<StudentReadDto> ToReadDtos(this IEnumerable<Student> src) =>
             src.Select(ToReadDto);
 
-        public static Student ToCreate(this StudentCreateDto dto) => new()
-        {
-            Id = Guid.NewGuid(),
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            Email = dto.Email
-        };
-
         public static void Apply(this Student entity, StudentPatchDto dto)
         {
             if (dto.FirstName is not null)
@@ -32,10 +25,12 @@ namespace gantt_server.Mappings
 
             if (dto.LastName is not null)
                 entity.LastName = dto.LastName;
-                
-            if (dto.Email is not null) 
-                entity.Email = dto.Email;
+
+            if (dto.Email is not null)
+                entity.Email = NormalizeEmail(dto.Email);
         }
+
+        public static string NormalizeEmail(string? email) =>
+            (email ?? string.Empty).Trim().ToLower(CultureInfo.InvariantCulture);
     }
 }
-

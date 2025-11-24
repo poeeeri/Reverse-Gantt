@@ -4,10 +4,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace gantt_server.Data.Migrations
+namespace gantt_server.Migrations
 {
     /// <inheritdoc />
-    public partial class InitMig : Migration
+    public partial class UserAuth : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -19,7 +19,9 @@ namespace gantt_server.Data.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     FirstName = table.Column<string>(type: "text", nullable: false),
                     LastName = table.Column<string>(type: "text", nullable: false),
-                    Email = table.Column<string>(type: "text", nullable: true)
+                    Email = table.Column<string>(type: "text", nullable: false),
+                    PasswordHash = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -49,7 +51,6 @@ namespace gantt_server.Data.Migrations
                     TeamId = table.Column<Guid>(type: "uuid", nullable: false),
                     Role = table.Column<int>(type: "integer", nullable: false),
                     JoinedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    StudentId1 = table.Column<Guid>(type: "uuid", nullable: true),
                     TeamId1 = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
@@ -61,11 +62,6 @@ namespace gantt_server.Data.Migrations
                         principalTable: "Students",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Executors_Students_StudentId1",
-                        column: x => x.StudentId1,
-                        principalTable: "Students",
-                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Executors_Teams_TeamId",
                         column: x => x.TeamId,
@@ -180,7 +176,7 @@ namespace gantt_server.Data.Migrations
                         column: x => x.TaskId,
                         principalTable: "ProjectTasks",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -188,11 +184,6 @@ namespace gantt_server.Data.Migrations
                 table: "Executors",
                 columns: new[] { "StudentId", "TeamId" },
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Executors_StudentId1",
-                table: "Executors",
-                column: "StudentId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Executors_TeamId",
@@ -218,6 +209,12 @@ namespace gantt_server.Data.Migrations
                 name: "IX_ProjectTasks_ProjectId",
                 table: "ProjectTasks",
                 column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Students_Email",
+                table: "Students",
+                column: "Email",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_TaskDependencies_DependencyId",

@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Mvc;
 using gantt_server.Dtos.StudentDtos;
-using gantt_server.Services.Interfaces;
 using gantt_server.Services;
+using gantt_server.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 namespace gantt_server.Controllers
 {
@@ -35,13 +35,10 @@ namespace gantt_server.Controllers
             {
                 return Conflict(conflictEx.Errors);
             }
-
         }
 
         [HttpPatch("{id:guid}")]
-        public async Task<ActionResult<StudentReadDto>> Patch(Guid id, [FromBody] StudentPatchDto dto,
-            CancellationToken ct
-        )
+        public async Task<ActionResult<StudentReadDto>> Patch(Guid id, [FromBody] StudentPatchDto dto, CancellationToken ct)
         {
             var isEmpty =
                 dto.FirstName == null &&
@@ -51,8 +48,15 @@ namespace gantt_server.Controllers
             if (isEmpty)
                 return BadRequest(new { error = "изменение не применено. все поля пусты" });
 
-            var result = await _studentService.PatchStudent(id, dto, ct);
-            return result is null ? NotFound() : Ok(result);
+            try
+            {
+                var result = await _studentService.PatchStudent(id, dto, ct);
+                return result is null ? NotFound() : Ok(result);
+            }
+            catch (StudentConflictException conflictEx)
+            {
+                return Conflict(conflictEx.Errors);
+            }
         }
 
         [HttpDelete("{id:guid}")]

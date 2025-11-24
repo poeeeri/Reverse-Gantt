@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using gantt_server.Data;
 
 #nullable disable
 
-namespace gantt_server.Data.Migrations
+namespace gantt_server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251115002430_UserAuth")]
+    partial class UserAuth
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -69,9 +72,6 @@ namespace gantt_server.Data.Migrations
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("StudentId1")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("TeamId")
                         .HasColumnType("uuid");
 
@@ -79,8 +79,6 @@ namespace gantt_server.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("StudentId1");
 
                     b.HasIndex("TeamId");
 
@@ -177,7 +175,11 @@ namespace gantt_server.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("FirstName")
@@ -188,7 +190,14 @@ namespace gantt_server.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("Students", (string)null);
                 });
@@ -237,21 +246,17 @@ namespace gantt_server.Data.Migrations
                     b.HasOne("gantt_server.Models.ProjectTask", null)
                         .WithMany()
                         .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
             modelBuilder.Entity("gantt_server.Models.Executor", b =>
                 {
                     b.HasOne("gantt_server.Models.Student", "Student")
-                        .WithMany()
+                        .WithMany("Executors")
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("gantt_server.Models.Student", null)
-                        .WithMany("Executors")
-                        .HasForeignKey("StudentId1");
 
                     b.HasOne("gantt_server.Models.Team", "Team")
                         .WithMany()

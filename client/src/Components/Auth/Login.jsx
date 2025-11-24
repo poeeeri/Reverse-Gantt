@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
+import { login } from '../../api/auth';
 import './Auth.css';
 
-const Login = ({ onToggleForm }) => {
+const Login = ({ onToggleForm, onAuth }) => {
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const handleChange = (e) => {
         setFormData({
@@ -14,10 +17,22 @@ const Login = ({ onToggleForm }) => {
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Login data:', formData);
-        // логика авторизации
+        setError('');
+        setLoading(true);
+        try {
+            const data = await login(formData);
+            const student = data.student ?? data.Student;
+            onAuth({
+                token: data.token ?? data.Token,
+                student
+            });
+        } catch (err) {
+            setError(err.message || 'Ошибка авторизации');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -47,10 +62,13 @@ const Login = ({ onToggleForm }) => {
                             className="auth-input"
                         />
                     </div>
-                    <button type="submit" className="auth-button">Войти</button>
+                    {error && <p className="error">{error}</p>}
+                    <button type="submit" className="auth-button" disabled={loading}>
+                        {loading ? 'Вход...' : 'Войти'}
+                    </button>
                 </form>
                 <p className="auth-toggle">
-                    Нет аккаунта? <span onClick={onToggleForm}>Зарегистрироваться</span>
+                    Нет аккаунта? <span onClick={onToggleForm}>Зарегистрируйтесь</span>
                 </p>
             </div>
         </div>
