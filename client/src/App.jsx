@@ -7,6 +7,7 @@ import ProtectedRoute from './Components/Layout/ProtectedRoute';
 import Login from './Components/Auth/Login';
 import Register from './Components/Auth/Register';
 import Dashboard from './Components/Dashboard/Dashboard';
+import Profile from './Components/Profile/Profile';
 
 import { getMe } from './api/auth';
 import { clearToken, getToken } from './api/http';
@@ -69,8 +70,8 @@ function App() {
         navigate('/login');
     };
 
-    const toggleForm = () => {
-        setAuthError('');
+    const handleUpdateUser = (updatedUser) => {
+        setUser(updatedUser);
     };
 
     if (checking) {
@@ -78,48 +79,54 @@ function App() {
     }
 
     return (
-        <Routes>
-            {!user && (
-                <>
-                    <Route path="/login" element={
-                        <AuthWrapper 
-                            onAuth={handleAuthSuccess} 
-                            onToggleForm={toggleForm} 
-                        />
-                    } />
-                    <Route path="/register" element={
-                        <AuthWrapper 
-                            onAuth={handleAuthSuccess} 
-                            onToggleForm={toggleForm} 
-                        />
-                    } />
-                </>
+        <div className="App">
+            <Routes>
+                {!user && (
+                    <>
+                        <Route path="/login" element={
+                            <AuthWrapper
+                                onAuth={handleAuthSuccess}
+                            />
+                        } />
+                        <Route path="/register" element={
+                            <AuthWrapper
+                                onAuth={handleAuthSuccess}
+                            />
+                        } />
+                        <Route path="*" element={<Navigate to="/login" replace />} />
+                    </>
+                )}
+
+                {user && (
+                    <Route path="/*" element={
+                        <ProtectedRoute user={user}>
+                            <MainLayout onLogout={handleLogout} />
+                        </ProtectedRoute>
+                    }>
+                        <Route index element={<Dashboard />} />
+                        <Route path="projects" element={<div>Проекты</div>} />
+                        <Route path="tasks" element={<div>Мои задачи</div>} />
+                        <Route path="profile" element={
+                            <Profile
+                                user={user}
+                                onUpdateUser={handleUpdateUser}
+                                onLogout={handleLogout}
+                            />
+                        } />
+                    </Route>
+                )}
+
+                {user && <Route path="/login" element={<Navigate to="/" replace />} />}
+                {user && <Route path="/register" element={<Navigate to="/" replace />} />}
+            </Routes>
+
+            {authError && !user && (
+                <div className="error-container">
+                    <p className="error">{authError}</p>
+                    <button onClick={() => window.location.reload()}>Обновить страницу</button>
+                </div>
             )}
-            
-            {user && (
-                <Route element={
-                    <ProtectedRoute user={user}>
-                        <MainLayout onLogout={handleLogout} />
-                    </ProtectedRoute>
-                }>
-                    <Route index element={<Dashboard />} />
-                    <Route path="/projects" element={<div>Проекты</div>} />
-                    <Route path="/tasks" element={<div>Мои задачи</div>} />
-                </Route>
-            )}
-            
-            {!user && <Route path="*" element={<Navigate to="/login" replace />} />}
-            {user && <Route path="/login" element={<Navigate to="/" replace />} />}
-            {user && <Route path="/register" element={<Navigate to="/" replace />} />}
-        
-            {authError && (
-                <Route path="*" element={
-                    <div className="error-container">
-                        <p className="error">{authError}</p>
-                    </div>
-                } />
-            )}
-        </Routes>
+        </div>
     );
 }
 
