@@ -1,8 +1,14 @@
 import React from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import './MainLayout.css';
 
 const MainLayout = () => {
+    const navigate = useNavigate();
+
+    const handleAvatarClick = () => {
+        navigate('/profile');
+    };
+
     return (
         <div className="layout-container">
             <aside className="sidebar">
@@ -24,8 +30,14 @@ const MainLayout = () => {
                                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                                 <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                             </svg>
-                            </button>
-                        <img src="https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcToBrCBTklb0pPxeKN_aqC7F2xLSi1Vrq6c49ucxc3YXWwx7b7d" alt="avatar" className="user-avatar"/>
+                        </button>
+                        <img
+                            src="https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcToBrCBTklb0pPxeKN_aqC7F2xLSi1Vrq6c49ucxc3YXWwx7b7d"
+                            alt="avatar"
+                            className="user-avatar"
+                            onClick={handleAvatarClick}
+                            style={{ cursor: 'pointer' }}
+                        />
                     </div>
                 </header>
 

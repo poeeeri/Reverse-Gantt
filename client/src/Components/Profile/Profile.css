@@ -1,0 +1,182 @@
+.profile-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.profile-card {
+    background: #ffdfe8;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 15px rgba(204, 29, 73, 0.1);
+    border: 1px solid #ffc9d7;
+}
+
+.profile-card h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #cc1d49;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.profile-form {
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #cc1d49;
+    font-size: 1rem;
+}
+
+.profile-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #ffc9d7;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #fff;
+    color: #333;
+}
+
+.profile-input:focus {
+    border-color: #fc809f;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(204, 29, 73, 0.1);
+}
+
+.profile-input:disabled {
+    background-color: #ffe9ef;
+    color: #666;
+    border-color: #ffdfe8;
+    cursor: not-allowed;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 25px;
+    flex-wrap: wrap;
+}
+
+.save-btn,
+.cancel-btn,
+.logout-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 140px;
+}
+
+.save-btn {
+    background-color: #cc1d49;
+    color: white;
+}
+
+.cancel-btn {
+    background-color: #cc1d49;
+    color: white;
+}
+
+.save-btn:hover:not(:disabled) {
+    background-color: #b01a41;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(204, 29, 73, 0.3);
+}
+
+.cancel-btn:hover:not(:disabled) {
+    background-color: #b01a41;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(204, 29, 73, 0.3);
+}
+
+.save-btn:disabled {
+    background-color: #ffc9d7;
+    color: #fc809f;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.cancel-btn:disabled {
+    background-color: #ffc9d7;
+    color: #fc809f;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.logout-btn {
+    background-color: transparent;
+    color: #cc1d49;
+    border: 2px solid #ffc9d7;
+}
+
+.logout-btn:hover {
+    background-color: #ffe9ef;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(204, 29, 73, 0.1);
+}
+
+.profile-info {
+    border-top: 2px solid #ffdfe8;
+    padding-top: 25px;
+    margin-top: 25px;
+}
+
+.profile-info h3 {
+    margin-bottom: 18px;
+    color: #cc1d49;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.profile-info p {
+    margin-bottom: 10px;
+    color: #666;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.profile-info strong {
+    color: #cc1d49;
+    font-weight: 600;
+}
+
+.success-message {
+    background-color: #ffe9ef;
+    color: #cc1d49;
+    padding: 14px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 2px solid #ffc9d7;
+    font-weight: 600;
+    text-align: center;
+}
+
+.error-message {
+    background-color: #ffe9ef;
+    color: #cc1d49;
+    padding: 14px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 2px solid #ffc9d7;
+    font-weight: 600;
+    text-align: center;
+}
+
+.profile-card {
+    animation: fadeIn 0.5s ease-out;
+}
