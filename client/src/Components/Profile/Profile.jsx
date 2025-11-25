@@ -3,7 +3,6 @@ import { updateStudent } from '../../api/student';
 import './Profile.css';
 
 const Profile = ({ user, onUpdateUser, onLogout }) => {
-    const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -32,6 +31,17 @@ const Profile = ({ user, onUpdateUser, onLogout }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!user || !user.id) {
+            setError('Пользователь не загружен. Пожалуйста, обновите страницу.');
+            return;
+        }
+
+        if (!formData.firstName || !formData.lastName || !formData.email) {
+            setError('Все поля должны быть заполнены');
+            return;
+        }
+
         setLoading(true);
         setError('');
         setSuccess('');
@@ -39,32 +49,51 @@ const Profile = ({ user, onUpdateUser, onLogout }) => {
         try {
             const updatedUser = await updateStudent({
                 id: user.id,
-                ...formData
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                email: formData.email
             });
 
             onUpdateUser(updatedUser);
             setSuccess('Данные успешно обновлены!');
-            setIsEditing(false);
         } catch (err) {
-            setError(err.message || 'Ошибка обновления данных');
+            console.error('Ошибка обновления:', err);
+            setError(`Ошибка обновления: ${err.message || 'Неизвестная ошибка'}`);
         } finally {
             setLoading(false);
         }
     };
 
     const handleCancel = () => {
-        setFormData({
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email
-        });
-        setIsEditing(false);
+        if (user) {
+            setFormData({
+                firstName: user.firstName || '',
+                lastName: user.lastName || '',
+                email: user.email || ''
+            });
+        }
         setError('');
         setSuccess('');
     };
 
-    if (!user) {
-        return <div>Пользователь не найден</div>;
+    if (!user || !user.id) {
+        return (
+            <div className="profile-container">
+                <div className="profile-card">
+                    <h1>Профиль пользователя</h1>
+                    <div className="error-message">
+                        Пользователь не загружен. Пожалуйста, войдите снова.
+                    </div>
+                    <button
+                        className="logout-btn"
+                        onClick={onLogout}
+                        style={{ marginTop: '20px' }}
+                    >
+                        Выйти и войти снова
+                    </button>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -72,8 +101,8 @@ const Profile = ({ user, onUpdateUser, onLogout }) => {
             <div className="profile-card">
                 <h1>Профиль пользователя</h1>
 
-                {success && <p className="success-message">{success}</p>}
-                {error && <p className="error-message">{error}</p>}
+                {success && <div className="success-message">{success}</div>}
+                {error && <div className="error-message">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="profile-form">
                     <div className="form-group">
@@ -83,8 +112,9 @@ const Profile = ({ user, onUpdateUser, onLogout }) => {
                             name="firstName"
                             value={formData.firstName}
                             onChange={handleChange}
-                            disabled={!isEditing}
+                            disabled={loading}
                             className="profile-input"
+                            required
                         />
                     </div>
 
@@ -95,8 +125,9 @@ const Profile = ({ user, onUpdateUser, onLogout }) => {
                             name="lastName"
                             value={formData.lastName}
                             onChange={handleChange}
-                            disabled={!isEditing}
+                            disabled={loading}
                             className="profile-input"
+                            required
                         />
                     </div>
 
@@ -107,54 +138,40 @@ const Profile = ({ user, onUpdateUser, onLogout }) => {
                             name="email"
                             value={formData.email}
                             onChange={handleChange}
-                            disabled={!isEditing}
+                            disabled={loading}
                             className="profile-input"
+                            required
                         />
                     </div>
 
                     <div className="profile-actions">
-                        {isEditing ? (
-                            <>
-                                <button
-                                    type="submit"
-                                    className="save-btn"
-                                    disabled={loading}
-                                >
-                                    {loading ? 'Сохранение...' : 'Сохранить'}
-                                </button>
-                                <button
-                                    type="button"
-                                    className="cancel-btn"
-                                    onClick={handleCancel}
-                                >
-                                    Отмена
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <button
-                                    type="button"
-                                    className="edit-btn"
-                                    onClick={() => setIsEditing(true)}
-                                >
-                                    Редактировать профиль
-                                </button>
-                                <button
-                                    type="button"
-                                    className="logout-btn"
-                                    onClick={onLogout}
-                                >
-                                    Выйти
-                                </button>
-                            </>
-                        )}
+                        <button
+                            type="submit"
+                            className="save-btn"
+                            disabled={loading}
+                        >
+                            {loading ? 'Сохранение...' : 'Сохранить изменения'}
+                        </button>
+                        <button
+                            type="button"
+                            className="cancel-btn"
+                            onClick={handleCancel}
+                            disabled={loading}
+                        >
+                            Отмена
+                        </button>
+                        <button
+                            type="button"
+                            className="logout-btn"
+                            onClick={onLogout}
+                        >
+                            Выйти
+                        </button>
                     </div>
                 </form>
 
                 <div className="profile-info">
-                    <h3>Дополнительная информация</h3>
                     <p><strong>ID:</strong> {user.id}</p>
-                    <p><strong>Дата регистрации:</strong> {new Date(user.createdAt).toLocaleDateString('ru-RU')}</p>
                 </div>
             </div>
         </div>

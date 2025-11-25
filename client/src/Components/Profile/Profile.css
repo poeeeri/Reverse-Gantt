@@ -5,7 +5,7 @@
 }
 
 .profile-card {
-    background: #ffe9ef;
+    background: #ffdfe8;
     border-radius: 12px;
     padding: 30px;
     box-shadow: 0 4px 15px rgba(204, 29, 73, 0.1);
@@ -57,6 +57,7 @@
     background-color: #ffe9ef;
     color: #666;
     border-color: #ffdfe8;
+    cursor: not-allowed;
 }
 
 .profile-actions {
@@ -66,7 +67,6 @@
     flex-wrap: wrap;
 }
 
-.edit-btn,
 .save-btn,
 .cancel-btn,
 .logout-btn {
@@ -80,23 +80,23 @@
     min-width: 140px;
 }
 
-.edit-btn {
-    background-color: #ffc9d7;
-    color: #cc1d49;
-}
-
-.edit-btn:hover {
-    background-color: #ffbccd;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(204, 29, 73, 0.2);
-}
-
 .save-btn {
     background-color: #cc1d49;
     color: white;
 }
 
+.cancel-btn {
+    background-color: #cc1d49;
+    color: white;
+}
+
 .save-btn:hover:not(:disabled) {
+    background-color: #b01a41;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(204, 29, 73, 0.3);
+}
+
+.cancel-btn:hover:not(:disabled) {
     background-color: #b01a41;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(204, 29, 73, 0.3);
@@ -110,15 +110,12 @@
     box-shadow: none;
 }
 
-.cancel-btn {
-    background-color: #ffe9ef;
-    color: #cc1d49;
-    border: 2px solid #ffc9d7;
-}
-
-.cancel-btn:hover {
-    background-color: #ffdfe8;
-    transform: translateY(-2px);
+.cancel-btn:disabled {
+    background-color: #ffc9d7;
+    color: #fc809f;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 .logout-btn {
@@ -178,4 +175,8 @@
     border: 2px solid #ffc9d7;
     font-weight: 600;
     text-align: center;
+}
+
+.profile-card {
+    animation: fadeIn 0.5s ease-out;
 }
