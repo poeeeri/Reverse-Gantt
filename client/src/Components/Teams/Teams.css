@@ -294,3 +294,58 @@
         align-self: flex-start;
     }
 }
+
+.teams-title-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    width: 100%;
+}
+
+.create-team-btn {
+    background: #cc1d49;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.create-team-btn:hover {
+    background: #a3163a;
+}
+
+.create-project-btn {
+    background: #cc1d49;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.create-project-btn:hover {
+    background: #a3163a;
+}
+
+@media (max-width: 768px) {
+    .teams-title-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+
+    .create-team-btn,
+    .create-project-btn {
+        align-self: flex-start;
+    }
+}

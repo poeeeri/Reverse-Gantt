@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getMyTeams } from '../../api/team';
+import CreateTeamModal from '../CreateTeam/CreateTeam';
 import CreateProjectModal from '../Projects/CreateProjectModal';
 import './Teams.css';
 
@@ -8,6 +9,7 @@ const Teams = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [createProjectModalOpen, setCreateProjectModalOpen] = useState(false);
+    const [createTeamModalOpen, setCreateTeamModalOpen] = useState(false);
     const [selectedTeam, setSelectedTeam] = useState(null);
 
     useEffect(() => {
@@ -61,6 +63,11 @@ const Teams = () => {
         loadTeams();
     };
 
+    const handleTeamCreated = () => {
+        setCreateTeamModalOpen(false);
+        loadTeams();
+    };
+
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('ru-RU');
     };
@@ -84,10 +91,20 @@ const Teams = () => {
     return (
         <div className="teams-container">
             <div className="teams-header">
-                <h1 className="teams-title">Мои команды</h1>
-                <p className="teams-subtitle">
-                    Управляйте своими командами и просматривайте их проекты
-                </p>
+                <div className="teams-title-section">
+                    <div>
+                        <h1 className="teams-title">Мои команды</h1>
+                        <p className="teams-subtitle">
+                            Управляйте своими командами и просматривайте их проекты
+                        </p>
+                    </div>
+                    <button
+                        className="create-team-btn"
+                        onClick={() => setCreateTeamModalOpen(true)}
+                    >
+                        + Создать команду
+                    </button>
+                </div>
             </div>
 
             <div className="teams-list">
@@ -186,6 +203,12 @@ const Teams = () => {
                 onProjectCreated={handleProjectCreated}
                 teamId={selectedTeam?.id}
                 teamName={selectedTeam?.name}
+            />
+
+            <CreateTeamModal
+                isOpen={createTeamModalOpen}
+                onClose={() => setCreateTeamModalOpen(false)}
+                onTeamCreated={handleTeamCreated}
             />
         </div>
     );

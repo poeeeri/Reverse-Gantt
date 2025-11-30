@@ -26,8 +26,7 @@ const Projects = () => {
                 subject: project.Subject,
                 finalDeadline: project.FinalDeadline,
                 status: project.Status,
-                teamId: project.TeamId,
-                projectTasks: project.ProjectTasks || []
+                teamId: project.TeamId
             }));
 
             setProjects(processedProjects);
@@ -48,6 +47,15 @@ const Projects = () => {
         return statuses[status] || 'Запланирован';
     };
 
+    const getStatusClass = (status) => {
+        const classes = {
+            0: 'status-planned',
+            1: 'status-in-progress',
+            2: 'status-completed'
+        };
+        return classes[status] || 'status-planned';
+    };
+
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('ru-RU');
     };
@@ -60,7 +68,7 @@ const Projects = () => {
     return (
         <div className="projects-container">
             <div className="projects-header">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div className="projects-title-section">
                     <div>
                         <h1 className="projects-title">Мои проекты</h1>
                         <p className="projects-subtitle">
@@ -68,7 +76,7 @@ const Projects = () => {
                         </p>
                     </div>
                     <button
-                        className="create-project-btn"
+                        className="create-project-main-btn"
                         onClick={() => setCreateModalOpen(true)}
                     >
                         + Создать проект
@@ -76,45 +84,38 @@ const Projects = () => {
                 </div>
             </div>
 
-            <div className="projects-list">
+            <div className="projects-list-simple">
                 {!projects || projects.length === 0 ? (
                     <div className="no-projects">
                         <p>У вас пока нет проектов</p>
                     </div>
                 ) : (
                     projects.map(project => (
-                        <div key={project.id} className="project-card">
-                            <div className="project-header">
-                                <h2 className="project-name">{project.name || 'Без названия'}</h2>
-                                <span className={`project-status ${project.status === 2 ? 'status-completed' : project.status === 1 ? 'status-in-progress' : 'status-planned'}`}>
-                                    {getStatusText(project.status)}
-                                </span>
-                            </div>
-                            {project.description && (
-                                <p className="project-description">{project.description}</p>
-                            )}
-                            <div className="project-details">
-                                <div className="project-detail">
-                                    <strong>Предмет:</strong> {project.subject || 'Не указан'}
-                                </div>
-                                <div className="project-detail">
-                                    <strong>Дедлайн:</strong> {formatDate(project.finalDeadline)}
+                        <div key={project.id} className="project-card-simple">
+                            <div className="project-card-header">
+                                <div className="project-main-info">
+                                    <h2 className="project-name">{project.name || 'Без названия'}</h2>
+                                    <span className={`project-status ${getStatusClass(project.status)}`}>
+                                        {getStatusText(project.status)}
+                                    </span>
                                 </div>
                             </div>
-                            <div className="project-tasks">
-                                <h3>Задачи проекта</h3>
-                                {project.projectTasks.length > 0 ? (
-                                    <ul className="tasks-list">
-                                        {project.projectTasks.map(task => (
-                                            <li key={task.Id} className="task-item">
-                                                <span className="task-name">{task.Name}</span>
-                                                <span className="task-status">{getStatusText(task.Status)}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <p>Нет задач</p>
+
+                            <div className="project-card-content">
+                                {project.description && (
+                                    <p className="project-description">{project.description}</p>
                                 )}
+
+                                <div className="project-meta-info">
+                                    <div className="project-meta-item">
+                                        <strong>Предмет:</strong>
+                                        <span>{project.subject || 'Не указан'}</span>
+                                    </div>
+                                    <div className="project-meta-item">
+                                        <strong>Дедлайн:</strong>
+                                        <span>{formatDate(project.finalDeadline)}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ))
