@@ -19,9 +19,11 @@ const Teams = () => {
             console.log('Teams data:', teamsData);
 
             const processedTeams = (teamsData || []).map(team => ({
-                ...team,
-                executors: team.executors || [],
-                projects: team.projects || []
+                id: team.Id,
+                name: team.Name,
+                description: team.Description,
+                executors: team.Executors || [],
+                projects: team.Projects || []
             }));
 
             setTeams(processedTeams);
@@ -90,21 +92,21 @@ const Teams = () => {
                                 <div className="team-section">
                                     <h3 className="section-title">Участники команды</h3>
                                     <div className="executors-list">
-                                        {team.executors.length > 0 ? (
+                                        {team.executors && team.executors.length > 0 ? (
                                             team.executors.map(executor => (
-                                                <div key={executor.id} className="executor-item">
+                                                <div key={executor.Id} className="executor-item">
                                                     <div className="executor-avatar">
-                                                        {executor.studentName ?
-                                                            executor.studentName.split(' ').map(n => n[0]).join('') :
+                                                        {executor.StudentName ?
+                                                            executor.StudentName.split(' ').map(n => n[0]).join('') :
                                                             '??'
                                                         }
                                                     </div>
                                                     <div className="executor-info">
                                                         <span className="executor-name">
-                                                            {executor.studentName || 'Неизвестный участник'}
+                                                            {executor.StudentName || 'Неизвестный участник'}
                                                         </span>
-                                                        <span className={`executor-role ${executor.role === 1 ? 'role-leader' : ''}`}>
-                                                            {getRoleText(executor.role)}
+                                                        <span className={`executor-role ${executor.Role === 1 ? 'role-leader' : ''}`}>
+                                                            {getRoleText(executor.Role)}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -118,19 +120,19 @@ const Teams = () => {
                                 <div className="team-section">
                                     <h3 className="section-title">Проекты команды</h3>
                                     <div className="projects-list">
-                                        {team.projects.length > 0 ? (
+                                        {team.projects && team.projects.length > 0 ? (
                                             team.projects.map(project => (
                                                 <div
-                                                    key={project.id}
+                                                    key={project.Id}
                                                     className="project-item"
-                                                    onClick={() => handleProjectClick(project.id)}
+                                                    onClick={() => handleProjectClick(project.Id)}
                                                 >
                                                     <div className="project-info">
-                                                        <h4 className="project-name">{project.name || 'Без названия'}</h4>
+                                                        <h4 className="project-name">{project.Name || 'Без названия'}</h4>
                                                         <p className="project-description">
-                                                            {project.description || 'Описание отсутствует'}
+                                                            {project.Description || 'Описание отсутствует'}
                                                         </p>
-                                                        <span className="project-subject">{project.subject || 'Без темы'}</span>
+                                                        <span className="project-subject">{project.Subject || 'Без темы'}</span>
                                                     </div>
                                                     <div className="project-arrow">
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
