@@ -1,0 +1,153 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(204, 29, 73, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-window {
+    background: #ffe9ef;
+    border: 1px solid #ffc9d7;
+    border-radius: 12px;
+    padding: 30px;
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(204, 29, 73, 0.2);
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: #cc1d49;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.modal-close:hover {
+    background: #ffc9d7;
+}
+
+.modal-window h2 {
+    color: #cc1d49;
+    margin: 0 0 20px 0;
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form input,
+.form textarea {
+    padding: 12px 15px;
+    border: 1px solid #ffc9d7;
+    border-radius: 8px;
+    background: white;
+    color: #cc1d49;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.form input:focus,
+.form textarea:focus {
+    outline: none;
+    border-color: #cc1d49;
+}
+
+.form input::placeholder,
+.form textarea::placeholder {
+    color: #a3163a;
+    opacity: 0.7;
+}
+
+.form input:disabled,
+.form textarea:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.submit-btn {
+    background: #cc1d49;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 10px;
+}
+
+.submit-btn:hover:not(:disabled) {
+    background: #a3163a;
+}
+
+.submit-btn:disabled {
+    background: #ffc9d7;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .modal-overlay {
+        padding: 10px;
+    }
+
+    .modal-window {
+        padding: 20px;
+    }
+}
+
+
+.create-project-btn {
+    background: #cc1d49;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.create-project-btn:hover {
+    background: #a3163a;
+}
+
+/* Обновим стиль для заголовка проектов */
+.projects-header>div {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+@media (max-width: 768px) {
+    .projects-header>div {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+
+    .create-project-btn {
+        align-self: flex-start;
+    }
+}

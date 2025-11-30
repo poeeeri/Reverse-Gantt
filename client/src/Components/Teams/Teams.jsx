@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { apiFetch } from '../../api/http';
 import { getMyTeams } from '../../api/team';
+import CreateProjectModal from '../Projects/CreateProjectModal';
 import './Teams.css';
 
 const Teams = () => {
     const [teams, setTeams] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [createProjectModalOpen, setCreateProjectModalOpen] = useState(false);
+    const [selectedTeam, setSelectedTeam] = useState(null);
 
     useEffect(() => {
         loadTeams();
@@ -43,9 +45,24 @@ const Teams = () => {
         return roles[role] || 'Участник';
     };
 
-    const handleProjectClick = (projectId) => {
-        console.log('Navigate to project:', projectId);
-        alert(`Переход к проекту ${projectId} (заглушка)`);
+    const isUserLeader = (team) => {
+        // определить является ли текущий пользователь лидером команды
+        return true;
+    };
+
+    const handleCreateProject = (team) => {
+        setSelectedTeam(team);
+        setCreateProjectModalOpen(true);
+    };
+
+    const handleProjectCreated = () => {
+        setCreateProjectModalOpen(false);
+        setSelectedTeam(null);
+        loadTeams();
+    };
+
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('ru-RU');
     };
 
     if (loading) {
@@ -82,7 +99,17 @@ const Teams = () => {
                     teams.map(team => (
                         <div key={team.id} className="team-card">
                             <div className="team-header">
-                                <h2 className="team-name">{team.name || 'Без названия'}</h2>
+                                <div className="team-title-section">
+                                    <h2 className="team-name">{team.name || 'Без названия'}</h2>
+                                    {isUserLeader(team) && (
+                                        <button
+                                            className="create-project-btn"
+                                            onClick={() => handleCreateProject(team)}
+                                        >
+                                            + Создать проект
+                                        </button>
+                                    )}
+                                </div>
                                 {team.description && (
                                     <p className="team-description">{team.description}</p>
                                 )}
@@ -92,7 +119,7 @@ const Teams = () => {
                                 <div className="team-section">
                                     <h3 className="section-title">Участники команды</h3>
                                     <div className="executors-list">
-                                        {team.executors && team.executors.length > 0 ? (
+                                        {team.executors.length > 0 ? (
                                             team.executors.map(executor => (
                                                 <div key={executor.Id} className="executor-item">
                                                     <div className="executor-avatar">
@@ -118,26 +145,27 @@ const Teams = () => {
                                 </div>
 
                                 <div className="team-section">
-                                    <h3 className="section-title">Проекты команды</h3>
+                                    <div className="projects-header">
+                                        <h3 className="section-title">Проекты команды</h3>
+                                    </div>
                                     <div className="projects-list">
-                                        {team.projects && team.projects.length > 0 ? (
+                                        {team.projects.length > 0 ? (
                                             team.projects.map(project => (
                                                 <div
                                                     key={project.Id}
                                                     className="project-item"
-                                                    onClick={() => handleProjectClick(project.Id)}
                                                 >
                                                     <div className="project-info">
                                                         <h4 className="project-name">{project.Name || 'Без названия'}</h4>
                                                         <p className="project-description">
                                                             {project.Description || 'Описание отсутствует'}
                                                         </p>
-                                                        <span className="project-subject">{project.Subject || 'Без темы'}</span>
-                                                    </div>
-                                                    <div className="project-arrow">
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                            <path d="M5 12h14M12 5l7 7-7 7" />
-                                                        </svg>
+                                                        <div className="project-meta">
+                                                            <span className="project-subject">{project.Subject || 'Без темы'}</span>
+                                                            <span className="project-deadline">
+                                                                До: {formatDate(project.FinalDeadline)}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))
@@ -151,6 +179,14 @@ const Teams = () => {
                     ))
                 )}
             </div>
+
+            <CreateProjectModal
+                isOpen={createProjectModalOpen}
+                onClose={() => setCreateProjectModalOpen(false)}
+                onProjectCreated={handleProjectCreated}
+                teamId={selectedTeam?.id}
+                teamName={selectedTeam?.name}
+            />
         </div>
     );
 };

@@ -231,3 +231,66 @@
         font-size: 1.6rem;
     }
 }
+
+
+
+
+
+.team-title-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.create-project-btn {
+    background: #cc1d49;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.create-project-btn:hover {
+    background: #a3163a;
+}
+
+.projects-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.project-meta {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.project-deadline {
+    font-size: 0.8rem;
+    color: #cc1d49;
+    background: #ffe9ef;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .team-title-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .create-project-btn {
+        align-self: flex-start;
+    }
+}
