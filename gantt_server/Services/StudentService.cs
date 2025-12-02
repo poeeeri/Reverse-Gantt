@@ -27,7 +27,24 @@ namespace gantt_server.Services
 
         public async Task<StudentReadDto?> GetStudentById(Guid id, CancellationToken ct)
         {
-            var student = await _db.Students.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
+            var student = await _db.Students
+                .AsNoTrackingWithIdentityResolution()
+                .Include(s => s.Executors)
+                    .ThenInclude(e => e.Team)
+                .Include(s => s.Executors)
+                    .ThenInclude(e => e.Tasks)
+                        .ThenInclude(t => t.Subtasks)
+                .Include(s => s.Executors)
+                    .ThenInclude(e => e.Tasks)
+                        .ThenInclude(t => t.Dependencies)
+                .Include(s => s.Executors)
+                    .ThenInclude(e => e.Tasks)
+                        .ThenInclude(t => t.DependentTasks)
+                .Include(s => s.Executors)
+                    .ThenInclude(e => e.Tasks)
+                        .ThenInclude(t => t.Executors)
+                            .ThenInclude(ex => ex.Student)
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             return student?.ToReadDto();
         }
 
@@ -88,7 +105,22 @@ namespace gantt_server.Services
         public async Task<StudentReadDto?> GetMeAsync(Guid studentId, CancellationToken ct)
         {
             var student = await _db.Students
-                .AsNoTracking()
+                .AsNoTrackingWithIdentityResolution()
+                .Include(s => s.Executors)
+                    .ThenInclude(e => e.Team)
+                .Include(s => s.Executors)
+                    .ThenInclude(e => e.Tasks)
+                        .ThenInclude(t => t.Subtasks)
+                .Include(s => s.Executors)
+                    .ThenInclude(e => e.Tasks)
+                        .ThenInclude(t => t.Dependencies)
+                .Include(s => s.Executors)
+                    .ThenInclude(e => e.Tasks)
+                        .ThenInclude(t => t.DependentTasks)
+                .Include(s => s.Executors)
+                    .ThenInclude(e => e.Tasks)
+                        .ThenInclude(t => t.Executors)
+                            .ThenInclude(ex => ex.Student)
                 .FirstOrDefaultAsync(x => x.Id == studentId, ct);
 
             return student?.ToReadDto();
