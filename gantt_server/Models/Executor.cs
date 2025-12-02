@@ -2,7 +2,7 @@ namespace gantt_server.Models
 {
     public class Executor
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         public Guid StudentId { get; set; }
         public required Student Student { get; set; }

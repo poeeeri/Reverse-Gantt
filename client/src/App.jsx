@@ -7,6 +7,7 @@ import ProtectedRoute from './Components/Layout/ProtectedRoute';
 import Login from './Components/Auth/Login';
 import Register from './Components/Auth/Register';
 import Dashboard from './Components/Dashboard/Dashboard';
+import Profile from './Components/Profile/Profile';
 
 import { getMe } from './api/auth';
 import { clearToken, getToken } from './api/http';
@@ -20,12 +21,12 @@ function AppWrapper() {
 }
 
 function AuthWrapper({ onAuth }) {
-      const [isLogin, setIsLogin] = useState(true);
-      const toggleForm = () => setIsLogin(prev => !prev);
+    const [isLogin, setIsLogin] = useState(true);
+    const toggleForm = () => setIsLogin(prev => !prev);
 
-      return isLogin
-          ? <Login onAuth={onAuth} onToggleForm={toggleForm} />
-          : <Register onAuth={onAuth} onToggleForm={toggleForm} />;
+    return isLogin
+        ? <Login onAuth={onAuth} onToggleForm={toggleForm} />
+        : <Register onAuth={onAuth} onToggleForm={toggleForm} />;
 }
 
 function App() {
@@ -33,6 +34,19 @@ function App() {
     const [checking, setChecking] = useState(true);
     const [authError, setAuthError] = useState('');
     const navigate = useNavigate();
+
+    const pascalToCamel = (obj) => {
+        if (!obj || typeof obj !== 'object') return obj;
+
+        const newObj = {};
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                const camelKey = key.charAt(0).toLowerCase() + key.slice(1);
+                newObj[camelKey] = obj[key];
+            }
+        }
+        return newObj;
+    };
 
     useEffect(() => {
         const token = getToken();
@@ -43,11 +57,10 @@ function App() {
 
         getMe()
             .then(userData => {
-                const student = userData.student || userData.Student || userData;
+                const student = pascalToCamel(userData);
                 setUser(student);
             })
             .catch(err => {
-                console.warn('Ошибка авторизации:', err);
                 setAuthError('Сессия истекла, войдите снова');
                 clearToken();
                 setUser(null);
@@ -56,7 +69,15 @@ function App() {
     }, []);
 
     const handleAuthSuccess = (data) => {
-        const student = data.student || data.Student || data;
+        let student;
+        if (data.student) {
+            student = pascalToCamel(data.student);
+        } else if (data.Student) {
+            student = pascalToCamel(data.Student);
+        } else {
+            student = pascalToCamel(data);
+        }
+
         setUser(student);
         setAuthError('');
         navigate('/');
@@ -69,8 +90,9 @@ function App() {
         navigate('/login');
     };
 
-    const toggleForm = () => {
-        setAuthError('');
+    const handleUpdateUser = (updatedUser) => {
+        const student = pascalToCamel(updatedUser);
+        setUser(student);
     };
 
     if (checking) {
@@ -82,20 +104,18 @@ function App() {
             {!user && (
                 <>
                     <Route path="/login" element={
-                        <AuthWrapper 
-                            onAuth={handleAuthSuccess} 
-                            onToggleForm={toggleForm} 
+                        <AuthWrapper
+                            onAuth={handleAuthSuccess}
                         />
                     } />
                     <Route path="/register" element={
-                        <AuthWrapper 
-                              onAuth={handleAuthSuccess} 
-                              onToggleForm={toggleForm} 
+                        <AuthWrapper
+                            onAuth={handleAuthSuccess}
                         />
                     } />
                 </>
             )}
-            
+
             {user && (
                 <Route element={
                     <ProtectedRoute user={user}>
@@ -105,20 +125,27 @@ function App() {
                     <Route index element={<Dashboard />} />
                     <Route path="/projects" element={<div>Проекты</div>} />
                     <Route path="/tasks" element={<div>Мои задачи</div>} />
+                    <Route path="/profile" element={
+                        <Profile
+                            user={user}
+                            onUpdateUser={handleUpdateUser}
+                            onLogout={handleLogout}
+                        />
+                    } />
                 </Route>
-              )}
-            
-              {!user && <Route path="*" element={<Navigate to="/login" replace />} />}
-              {user && <Route path="/login" element={<Navigate to="/" replace />} />}
-              {user && <Route path="/register" element={<Navigate to="/" replace />} />}
-            
-              {authError && (
-                  <Route path="*" element={
-                      <div className="error-container">
-                          <p className="error">{authError}</p>
-                      </div>
-                  } />
-              )}
+            )}
+
+            {!user && <Route path="*" element={<Navigate to="/login" replace />} />}
+            {user && <Route path="/login" element={<Navigate to="/" replace />} />}
+            {user && <Route path="/register" element={<Navigate to="/" replace />} />}
+
+            {authError && (
+                <Route path="*" element={
+                    <div className="error-container">
+                        <p className="error">{authError}</p>
+                    </div>
+                } />
+            )}
         </Routes>
     );
 }

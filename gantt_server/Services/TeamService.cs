@@ -94,7 +94,7 @@ namespace gantt_server.Services
             return executor.ToTeamExecutorDto();
         }
 
-        public async Task<bool> RemoveExecutorAsync(Guid teamId, int executorId, CancellationToken ct)
+        public async Task<bool> RemoveExecutorAsync(Guid teamId, Guid executorId, CancellationToken ct)
         {
             var executor = await _db.Executors.FirstOrDefaultAsync(e => e.Id == executorId && e.TeamId == teamId, ct);
             if (executor is null) 
