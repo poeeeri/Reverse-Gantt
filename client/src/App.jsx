@@ -8,6 +8,7 @@ import Login from './Components/Auth/Login';
 import Register from './Components/Auth/Register';
 import Dashboard from './Components/Dashboard/Dashboard';
 import Profile from './Components/Profile/Profile';
+import ProjectTasks from './Components/Tasks/ProjectTasks';
 
 import { getMe } from './api/auth';
 import { clearToken, getToken } from './api/http';
@@ -124,7 +125,7 @@ function App() {
                 }>
                     <Route index element={<Dashboard />} />
                     <Route path="/projects" element={<div>Проекты</div>} />
-                    <Route path="/tasks" element={<div>Мои задачи</div>} />
+                    <Route path="/tasks" element={<ProjectTasks user={user} />} />
                     <Route path="/profile" element={
                         <Profile
                             user={user}
