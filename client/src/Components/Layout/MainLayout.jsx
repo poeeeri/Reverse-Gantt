@@ -18,6 +18,7 @@ const MainLayout = () => {
                 <nav className="sidebar-menu">
                     <NavLink to="/" className={({ isActive }) => (isActive ? "menu-btn active" : "menu-btn")}>Главная страница</NavLink>
                     <NavLink to="/projects" className={({ isActive }) => (isActive ? "menu-btn active" : "menu-btn")}>Проекты</NavLink>
+                    <NavLink to="/teams" className={({ isActive }) => (isActive ? "menu-btn active" : "menu-btn")}>Команды</NavLink>
                     <NavLink to="/tasks" className={({ isActive }) => (isActive ? "menu-btn active" : "menu-btn")}>Мои задачи</NavLink>
                 </nav>
             </aside>
