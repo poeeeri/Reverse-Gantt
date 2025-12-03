@@ -1,17 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { getMyProjects } from '../../api/project';
 import CreateProjectModal from './CreateProjectModal';
+import ProjectDetailModal from './ProjectDetailModal';
+import { useLocation } from 'react-router-dom';
 import './Projects.css';
 
-const Projects = () => {
+const Projects = ({ user }) => {
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [createModalOpen, setCreateModalOpen] = useState(false);
+    const [selectedProject, setSelectedProject] = useState(null);
+    const [detailModalOpen, setDetailModalOpen] = useState(false);
+
+    const location = useLocation();
 
     useEffect(() => {
         loadProjects();
     }, []);
+
+    useEffect(() => {
+        if (location.state?.openProjectId && projects.length > 0) {
+            const projectToOpen = projects.find(p => p.id === location.state.openProjectId);
+            if (projectToOpen) {
+                setSelectedProject(projectToOpen);
+                setDetailModalOpen(true);
+
+                window.history.replaceState({}, document.title);
+            }
+        }
+    }, [projects, location.state]);
 
     const loadProjects = async () => {
         try {
@@ -65,6 +83,11 @@ const Projects = () => {
         loadProjects();
     };
 
+    const handleProjectClick = (project) => {
+        setSelectedProject(project);
+        setDetailModalOpen(true);
+    };
+
     return (
         <div className="projects-container">
             <div className="projects-header">
@@ -91,7 +114,7 @@ const Projects = () => {
                     </div>
                 ) : (
                     projects.map(project => (
-                        <div key={project.id} className="project-card-simple">
+                        <div key={project.id} className="project-card-simple" onClick={() => handleProjectClick(project)}>
                             <div className="project-card-header">
                                 <div className="project-main-info">
                                     <h2 className="project-name">{project.name || 'Без названия'}</h2>
@@ -126,6 +149,29 @@ const Projects = () => {
                 isOpen={createModalOpen}
                 onClose={() => setCreateModalOpen(false)}
                 onProjectCreated={handleProjectCreated}
+            />
+
+            <ProjectDetailModal
+                project={selectedProject}
+                isOpen={detailModalOpen}
+                onClose={() => {
+                    setDetailModalOpen(false);
+                    setSelectedProject(null);
+                }}
+                onUpdate={(updatedProject) => {
+                    setProjects(prev => prev.map(p =>
+                        p.id === updatedProject.Id ? {
+                            ...p,
+                            name: updatedProject.Name,
+                            description: updatedProject.Description,
+                            subject: updatedProject.Subject,
+                            status: updatedProject.Status,
+                            finalDeadline: updatedProject.FinalDeadline
+                        } : p
+                    ));
+                    setDetailModalOpen(false);
+                }}
+                user={user}
             />
         </div>
     );

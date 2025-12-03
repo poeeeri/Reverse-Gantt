@@ -2,15 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { getMyTeams } from '../../api/team';
 import CreateTeamModal from '../CreateTeam/CreateTeam';
 import CreateProjectModal from '../Projects/CreateProjectModal';
+import { useNavigate } from 'react-router-dom';
 import './Teams.css';
 
-const Teams = () => {
+const Teams = ({ user }) => {
     const [teams, setTeams] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [createProjectModalOpen, setCreateProjectModalOpen] = useState(false);
     const [createTeamModalOpen, setCreateTeamModalOpen] = useState(false);
     const [selectedTeam, setSelectedTeam] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         loadTeams();
@@ -45,6 +47,15 @@ const Teams = () => {
             1: 'Лидер'
         };
         return roles[role] || 'Участник';
+    };
+
+    const handleProjectClick = (project) => {
+        navigate('/projects', {
+            state: {
+                openProjectId: project.Id,
+                openProjectDetails: true
+            }
+        });
     };
 
     const isUserLeader = (team) => {
@@ -171,6 +182,7 @@ const Teams = () => {
                                                 <div
                                                     key={project.Id}
                                                     className="project-item"
+                                                    onClick={() => handleProjectClick(project)}
                                                 >
                                                     <div className="project-info">
                                                         <h4 className="project-name">{project.Name || 'Без названия'}</h4>
