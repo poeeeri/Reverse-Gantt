@@ -30,3 +30,8 @@ export const getStudentProfile = async (id) => {
     const response = await apiFetch(`/students/${id}`);
     return response;
 };
+
+export const getStudentTeamsAndTasks = async (id) => {
+    const response = await apiFetch(`/students/${id}/tasks`);
+    return response;
+};

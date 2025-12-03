@@ -1,0 +1,22 @@
+.task-card {
+    animation: cardFadeIn 0.25s ease;
+}
+
+.task-card:hover .progress-circle {
+    transform: scale(1.03);
+}
+
+.progress-circle {
+    transition: transform 0.2s ease;
+}
+
+@keyframes cardFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

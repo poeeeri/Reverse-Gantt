@@ -8,8 +8,12 @@ import Login from './Components/Auth/Login';
 import Register from './Components/Auth/Register';
 import Dashboard from './Components/Dashboard/Dashboard';
 import Profile from './Components/Profile/Profile';
+<<<<<<< HEAD
 import Teams from './Components/Teams/Teams';
 import Projects from './Components/Projects/Projects';
+=======
+import ProjectTasks from './Components/Tasks/ProjectTasks';
+>>>>>>> develop
 
 import { getMe } from './api/auth';
 import { clearToken, getToken } from './api/http';
@@ -125,9 +129,14 @@ function App() {
                     </ProtectedRoute>
                 }>
                     <Route index element={<Dashboard />} />
+<<<<<<< HEAD
                     <Route path="/projects" element={<Projects />} />
                     <Route path="/teams" element={<Teams />} />
                     <Route path="/tasks" element={<div>Мои задачи</div>} />
+=======
+                    <Route path="/projects" element={<div>Проекты</div>} />
+                    <Route path="/tasks" element={<ProjectTasks user={user} />} />
+>>>>>>> develop
                     <Route path="/profile" element={
                         <Profile
                             user={user}
