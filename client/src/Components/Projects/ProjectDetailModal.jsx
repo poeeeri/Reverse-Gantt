@@ -130,13 +130,24 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
         }
     };
 
-    const getStatusText = (status) => {
+    const getProjectStatusText = (status) => {
         const statuses = {
             0: 'Запланирован',
             1: 'В работе',
             2: 'Завершен'
         };
         return statuses[status] || 'Запланирован';
+    };
+
+    const getTaskStatusText = (status) => {
+        const statuses = {
+            0: 'Создано',
+            1: 'Доступно',
+            2: 'В процессе',
+            3: 'Сделано',
+            4: 'Отменено'
+        };
+        return statuses[status] || 'Создана';
     };
 
     const formatDate = (dateString) => {
@@ -229,7 +240,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                                     </select>
                                 ) : (
                                     <span className={`project-status ${project.status === 2 ? 'status-completed' : project.status === 1 ? 'status-in-progress' : 'status-planned'}`}>
-                                        {getStatusText(project.status)}
+                                        {getProjectStatusText(project.status)}
                                     </span>
                                 )}
                             </div>
@@ -269,7 +280,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                                     <div key={task.Id} className="task-item">
                                         <div className="task-header">
                                             <span className="task-name">{task.Name}</span>
-                                            <span className="task-status">{getStatusText(task.Status)}</span>
+                                            <span className="task-status">{getTaskStatusText(task.Status)}</span>
                                         </div>
                                         {task.Description && (
                                             <p className="task-description">{task.Description}</p>
