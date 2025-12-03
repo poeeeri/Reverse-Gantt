@@ -155,10 +155,15 @@ const ProjectTasks = ({ user }) => {
         [assignedTasksWithContext, leaderTasks]
     );
 
+    const ownTasks = useMemo(() => {
+        const isMine = (task) => task.executors?.some((ex) => ex.studentId === user?.id);
+        return combinedTasks.filter((task) => isMine(task) || task.scope === 'member');
+    }, [combinedTasks, user]);
+
     const filteredTasks = useMemo(() => {
-        if (statusFilter === 'all') return combinedTasks;
-        return combinedTasks.filter((task) => normalizeStatus(task.status) === statusFilter);
-    }, [combinedTasks, statusFilter]);
+        if (statusFilter === 'all') return ownTasks;
+        return ownTasks.filter((task) => normalizeStatus(task.status) === statusFilter);
+    }, [ownTasks, statusFilter]);
 
     const taskTree = useMemo(() => buildTree(filteredTasks), [filteredTasks]);
 
