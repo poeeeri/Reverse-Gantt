@@ -17,7 +17,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                 description: project.description,
                 subject: project.subject,
                 status: project.status,
-                finalDeadline: project.finalDeadline.split('T')[0] // Форматируем дату
+                finalDeadline: project.finalDeadline.split('T')[0]
             });
             loadProjectDetails();
         }
@@ -25,11 +25,9 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
 
     const loadProjectDetails = async () => {
         try {
-            // Загружаем задачи проекта
             const projectDetails = await apiFetch(`/projects/${project.id}`);
             setTasks(projectDetails.ProjectTasks || []);
 
-            // Загружаем информацию о команде
             if (project.teamId) {
                 const teamData = await apiFetch(`/teams/${project.teamId}`);
                 setTeam(teamData);
@@ -39,12 +37,10 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
         }
     };
 
-    // ProjectDetailModal.jsx - правильная функция isUserLeader
     const isUserLeader = () => {
-        // Проверяем, является ли пользователь лидером команды этого проекта
         if (!team || !user) return false;
 
-        const userId = user.id; // У пользователя свойство 'id' (с маленькой буквы)
+        const userId = user.id;
 
         return team.Executors?.some(executor =>
             executor.StudentId === userId && executor.Role === 1
@@ -128,7 +124,6 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                 </div>
 
                 <div className="detail-modal-content">
-                    {/* Основная информация */}
                     <div className="detail-section">
                         <h3>Основная информация</h3>
                         <div className="detail-info-grid">
@@ -200,7 +195,6 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                         </div>
                     </div>
 
-                    {/* Задачи проекта */}
                     <div className="detail-section">
                         <h3>Задачи проекта ({tasks.length})</h3>
                         <div className="tasks-list">
@@ -222,7 +216,6 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                         </div>
                     </div>
 
-                    {/* Участники команды */}
                     {team && (
                         <div className="detail-section">
                             <h3>Участники команды ({team.Executors?.length || 0})</h3>

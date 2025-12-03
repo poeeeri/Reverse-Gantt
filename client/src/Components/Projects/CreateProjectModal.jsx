@@ -12,7 +12,6 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated, teamId, teamNam
     const [teams, setTeams] = useState([]);
     const [selectedTeamId, setSelectedTeamId] = useState(teamId || '');
 
-    // Если teamId не передан, загружаем список команд
     useEffect(() => {
         if (isOpen && !teamId) {
             loadTeams();
@@ -38,7 +37,6 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated, teamId, teamNam
             return;
         }
 
-        // Если команда не выбрана (и мы в режиме выбора команды) - ошибка
         if (!teamId && !selectedTeamId) {
             setError('Выберите команду');
             return;
@@ -63,7 +61,6 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated, teamId, teamNam
 
             alert('Проект успешно создан!');
 
-            // Сброс формы
             setProjectName('');
             setDescription('');
             setSubject('');

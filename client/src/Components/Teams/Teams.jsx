@@ -3,6 +3,8 @@ import { getMyTeams } from '../../api/team';
 import CreateTeamModal from '../CreateTeam/CreateTeam';
 import CreateProjectModal from '../Projects/CreateProjectModal';
 import { useNavigate } from 'react-router-dom';
+import TeamMemberModal from './TeamMemberModal';
+import AddMemberModal from './AddMemberModal';
 import './Teams.css';
 
 const Teams = ({ user }) => {
@@ -12,7 +14,12 @@ const Teams = ({ user }) => {
     const [createProjectModalOpen, setCreateProjectModalOpen] = useState(false);
     const [createTeamModalOpen, setCreateTeamModalOpen] = useState(false);
     const [selectedTeam, setSelectedTeam] = useState(null);
+    const [selectedMember, setSelectedMember] = useState(null);
+    const [memberModalOpen, setMemberModalOpen] = useState(false);
     const navigate = useNavigate();
+
+    const [addMemberModalOpen, setAddMemberModalOpen] = useState(false);
+    const [teamForAddingMember, setTeamForAddingMember] = useState(null);
 
     useEffect(() => {
         loadTeams();
@@ -58,9 +65,34 @@ const Teams = ({ user }) => {
         });
     };
 
+    const handleMemberClick = (team, member) => {
+        if (isUserLeader(team)) {
+            setSelectedTeam(team);
+            setSelectedMember(member);
+            setMemberModalOpen(true);
+        }
+    };
+
+    const handleMemberUpdated = () => {
+        loadTeams();
+        setMemberModalOpen(false);
+        setSelectedMember(null);
+        setSelectedTeam(null);
+    };
+
+    const handleAddMemberClick = (team) => {
+        setTeamForAddingMember(team);
+        setAddMemberModalOpen(true);
+    };
+
     const isUserLeader = (team) => {
-        // определить является ли текущий пользователь лидером команды
-        return true;
+        if (!user || !team) return false;
+
+        const userId = user.id;
+
+        return team.executors.some(executor =>
+            executor.StudentId === userId && executor.Role === 1
+        );
     };
 
     const handleCreateProject = (team) => {
@@ -149,7 +181,10 @@ const Teams = ({ user }) => {
                                     <div className="executors-list">
                                         {team.executors.length > 0 ? (
                                             team.executors.map(executor => (
-                                                <div key={executor.Id} className="executor-item">
+                                                <div key={executor.Id} className="executor-item" onClick={() => isUserLeader(team) && handleMemberClick(team, executor)} style={{
+                                                    cursor: isUserLeader(team) ? 'pointer' : 'default',
+                                                    position: 'relative'
+                                                }}>
                                                     <div className="executor-avatar">
                                                         {executor.StudentName ?
                                                             executor.StudentName.split(' ').map(n => n[0]).join('') :
@@ -164,18 +199,33 @@ const Teams = ({ user }) => {
                                                             {getRoleText(executor.Role)}
                                                         </span>
                                                     </div>
+                                                    {isUserLeader(team) && (
+                                                        <div className="member-actions-indicator">
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ))
                                         ) : (
                                             <p className="no-projects">Нет участников</p>
                                         )}
                                     </div>
+
+                                    {isUserLeader(team) && (
+                                        <div className="add-members-section">
+                                            <button
+                                                className="add-member-btn"
+                                                onClick={() => handleAddMemberClick(team)}
+                                            >
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <path d="M12 5v14M5 12h14" />
+                                                </svg>
+                                                Добавить участника
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="team-section">
-                                    <div className="projects-header">
-                                        <h3 className="section-title">Проекты команды</h3>
-                                    </div>
                                     <div className="projects-list">
                                         {team.projects.length > 0 ? (
                                             team.projects.map(project => (
@@ -221,6 +271,29 @@ const Teams = ({ user }) => {
                 isOpen={createTeamModalOpen}
                 onClose={() => setCreateTeamModalOpen(false)}
                 onTeamCreated={handleTeamCreated}
+            />
+
+            <TeamMemberModal
+                team={selectedTeam}
+                member={selectedMember}
+                isOpen={memberModalOpen}
+                onClose={() => {
+                    setMemberModalOpen(false);
+                    setSelectedMember(null);
+                    setSelectedTeam(null);
+                }}
+                onMemberUpdated={handleMemberUpdated}
+                isLeader={selectedTeam ? isUserLeader(selectedTeam) : false}
+            />
+
+            <AddMemberModal
+                team={teamForAddingMember}
+                isOpen={addMemberModalOpen}
+                onClose={() => {
+                    setAddMemberModalOpen(false);
+                    setTeamForAddingMember(null);
+                }}
+                onMemberAdded={handleMemberUpdated}
             />
         </div>
     );

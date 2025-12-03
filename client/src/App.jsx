@@ -127,7 +127,7 @@ function App() {
                 }>
                     <Route index element={<Dashboard />} />
                     <Route path="/projects" element={<Projects user={user} />} />
-                    <Route path="/teams" element={<Teams />} />
+                    <Route path="/teams" element={<Teams user={user} />} />
                     <Route path="/tasks" element={<ProjectTasks user={user} />} />
                     <Route path="/profile" element={
                         <Profile

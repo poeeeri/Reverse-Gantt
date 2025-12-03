@@ -260,13 +260,6 @@
     background: #a3163a;
 }
 
-.projects-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
 .project-meta {
     display: flex;
     gap: 10px;
@@ -348,4 +341,56 @@
     .create-project-btn {
         align-self: flex-start;
     }
+}
+
+.member-actions-indicator {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #cc1d49;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.executor-item:hover .member-actions-indicator {
+    opacity: 1;
+}
+
+.executor-item:hover {
+    background: #ffe9ef;
+    cursor: pointer;
+}
+
+.executor-item {
+    position: relative;
+    padding-right: 40px;
+}
+
+.add-members-section {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #ffc9d7;
+}
+
+.add-member-btn {
+    background: #cc1d49;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.add-member-btn:hover {
+    background: #a3163a;
 }
