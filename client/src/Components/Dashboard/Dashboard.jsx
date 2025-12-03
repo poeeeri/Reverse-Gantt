@@ -1,23 +1,20 @@
-﻿import React, { useState } from "react";
+﻿import React from "react";
 import "./Dashboard.css";
-import CreateTeamModal from "../CreateTeam/CreateTeam";
 
 const Dashboard = () => {
-    const [showTeamModal, setShowTeamModal] = useState(false);
-
     const mockProjects = [
         {
             id: 1,
             progress: 80,
             title: "Адаптивный редизайн мобильной версии",
-            description: "Переработка всех экранов под мобильные устройства", 
+            description: "Переработка всех экранов под мобильные устройства",
             daysLeft: 2
         },
         {
             id: 2,
             progress: 45,
             title: "Создание базы данных",
-            description: "Проектирование и реализация структуры таблиц", 
+            description: "Проектирование и реализация структуры таблиц",
             daysLeft: 5
         },
     ];
@@ -29,18 +26,6 @@ const Dashboard = () => {
                 <p className="dashboard-subtitle">
                     Здесь вы можете создавать проекты, управлять командами и следить за своими задачами
                 </p>
-
-                <div className="dashboard-buttons">
-                    <button
-                        className="dash-btn"
-                        onClick={() => setShowTeamModal(true)}
-                    >
-                        Создать команду
-                    </button>
-                    <button className="dash-btn">
-                        Создать проект
-                    </button>
-                </div>
             </div>
 
             <div className="dashboard-content">
@@ -67,13 +52,6 @@ const Dashboard = () => {
                     </div>
                 </div>
             </div>
-
-            {showTeamModal && (
-                <CreateTeamModal
-                    isOpen={showTeamModal}
-                    onClose={() => setShowTeamModal(false)}
-                />
-            )}
         </div>
     );
 };

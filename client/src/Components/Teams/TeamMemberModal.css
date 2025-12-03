@@ -1,0 +1,140 @@
+.team-member-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+}
+
+.team-member-modal {
+    background: #ffe9ef;
+    border: 2px solid #ffc9d7;
+    border-radius: 12px;
+    padding: 30px;
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(204, 29, 73, 0.2);
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: #cc1d49;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.modal-close:hover {
+    background: #ffc9d7;
+}
+
+.member-info {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.member-avatar-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #ffc9d7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #cc1d49;
+    font-size: 2rem;
+    margin: 0 auto 15px;
+}
+
+.member-info h3 {
+    color: #cc1d49;
+    margin: 0 0 5px 0;
+}
+
+.member-info p {
+    color: #a3163a;
+    margin: 0;
+}
+
+.management-section {
+    border-top: 1px solid #ffc9d7;
+    padding-top: 20px;
+}
+
+.management-section h4 {
+    color: #cc1d49;
+    margin: 0 0 10px 0;
+}
+
+.management-section select {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ffc9d7;
+    border-radius: 8px;
+    background: white;
+    color: #cc1d49;
+    font-size: 1rem;
+    margin-bottom: 15px;
+}
+
+.management-section select:focus {
+    outline: none;
+    border-color: #cc1d49;
+}
+
+.change-role-btn,
+.remove-member-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-bottom: 10px;
+    border: none;
+    font-size: 1rem;
+}
+
+.change-role-btn {
+    background: #cc1d49;
+    color: white;
+}
+
+.change-role-btn:hover:not(:disabled) {
+    background: #a3163a;
+}
+
+.remove-member-btn {
+    background: #ff6b6b;
+    color: white;
+}
+
+.remove-member-btn:hover:not(:disabled) {
+    background: #ff5252;
+}
+
+.change-role-btn:disabled,
+.remove-member-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.error-message {
+    color: #ff6b6b;
+    text-align: center;
+    margin-top: 15px;
+}
