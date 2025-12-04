@@ -160,12 +160,25 @@ const ProjectTasks = ({ user }) => {
         return combinedTasks.filter((task) => isMine(task) || task.scope === 'member');
     }, [combinedTasks, user]);
 
-    const filteredTasks = useMemo(() => {
-        if (statusFilter === 'all') return ownTasks;
-        return ownTasks.filter((task) => normalizeStatus(task.status) === statusFilter);
-    }, [ownTasks, statusFilter]);
+    const taskTree = useMemo(() => {
+        const baseTree = buildTree(ownTasks);
+        if (statusFilter === 'all') return baseTree;
 
-    const taskTree = useMemo(() => buildTree(filteredTasks), [filteredTasks]);
+        const match = (task) => normalizeStatus(task.status) === statusFilter;
+        const filterAndPromote = (nodes) => {
+            return nodes.flatMap((node) => {
+                const filteredChildren = filterAndPromote(node.children || []);
+                const selfMatch = match(node);
+                if (selfMatch) {
+                    return [{ ...node, children: filteredChildren }];
+                }
+                // parent не подходит под фильтр — показываем только подходящих потомков
+                return filteredChildren;
+            });
+        };
+
+        return filterAndPromote(baseTree);
+    }, [ownTasks, statusFilter]);
 
     const renderBranch = (task, level = 0) => {
         const hasChildren = task.children && task.children.length > 0;
