@@ -21,6 +21,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
     const [ganttModalOpen, setGanttModalOpen] = useState(false);
     const [loadingDetails, setLoadingDetails] = useState(false);
     const [openTaskMenu, setOpenTaskMenu] = useState(null);
+    const [editDeadlineLimit, setEditDeadlineLimit] = useState(null);
 
     useEffect(() => {
         if (project && isOpen) {
@@ -104,9 +105,54 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
         });
         setTaskEditError('');
         setSelectedExecutors(task.Executors?.map((e) => e.Id) || []);
+
+        const parent = task.ParentTaskId ? tasks.find((t) => t.Id === task.ParentTaskId) : null;
+        const deps = task.DependencyIds || [];
+        const candidates = [];
+        if (parent?.Deadline) candidates.push(new Date(parent.Deadline));
+        deps.forEach((depId) => {
+            const dep = tasks.find((t) => t.Id === depId);
+            if (dep?.Deadline) candidates.push(new Date(dep.Deadline));
+        });
+        if (candidates.length) {
+            setEditDeadlineLimit(new Date(Math.min(...candidates.map((d) => d.getTime()))));
+        } else {
+            setEditDeadlineLimit(null);
+        }
     };
 
-    
+    const handleTaskUpdate = async (e) => {
+        e.preventDefault();
+        if (!editTask) return;
+        setTaskEditError('');
+
+        const limit = editDeadlineLimit;
+        if (editTask.DeadlineDateOnly && limit && new Date(editTask.DeadlineDateOnly) > limit) {
+            setTaskEditError(`Дедлайн не может быть позже ${limit.toLocaleDateString}`);
+            return;
+        }
+
+        try {
+            setTaskEditLoading(true);
+            const payload = {
+                Name: editTask.Name,
+                Description: editTask.Description,
+                DurationDays: Number(editTask.DurationDays) || 1,
+                Status: Number(editTask.Status),
+                Deadline: editTask.DeadlineDateOnly ? new Date(editTask.DeadlineDateOnly).toISOString() : null,
+                ParentTaskId: editTask.ParentTaskId || null,
+                ExecutorIds: selectedExecutors.length ? selectedExecutors : null
+            };
+            const updated = await updateTask(editTask.Id, payload);
+            await loadProjectDetails();
+            setEditTask(null);
+            return updated;
+        } catch (err) {
+            setTaskEditError(err.message || 'Не удалось обновить задачу');
+        } finally {
+            setTaskEditLoading(false);
+        }
+    };
 
     const handleSave = async () => {
         try {

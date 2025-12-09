@@ -25,6 +25,20 @@ const TaskCreator = ({ projectId, team, tasks, onCreated, defaultParentId, lockP
 
     const availableExecutors = useMemo(() => team?.Executors || [], [team]);
 
+    const getDeadlineLimit = () => {
+        const candidates = [];
+        if (parentTaskId) {
+            const parent = (tasks || []).find((t) => (t.Id || t.id) === parentTaskId);
+            if (parent?.Deadline) candidates.push(new Date(parent.Deadline));
+        }
+        (dependencyIds || []).forEach((depId) => {
+            const dep = (tasks || []).find((t) => (t.Id || t.id) === depId);
+            if (dep?.Deadline) candidates.push(new Date(dep.Deadline));
+        });
+        if (!candidates.length) return null;
+        return new Date(Math.min(...candidates.map((d) => d.getTime())));
+    };
+
     React.useEffect(() => {
         setParentTaskId(defaultParentId || '');
     }, [defaultParentId]);
@@ -78,6 +92,12 @@ const TaskCreator = ({ projectId, team, tasks, onCreated, defaultParentId, lockP
         
         if (availableExecutors.length > 0 && executorIds.length === 0) {
             setError('Выберите хотя бы одного исполнителя для задачи.');
+            return;
+        }
+
+        const limit = getDeadlineLimit();
+        if (deadline && limit && new Date(deadline) > limit) {
+            setError(`Дедлайн не может быть позже ${limit.toLocaleDateString('ru-RU')}`);
             return;
         }
 

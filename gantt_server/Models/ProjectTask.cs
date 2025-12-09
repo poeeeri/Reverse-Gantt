@@ -23,6 +23,7 @@ namespace gantt_server.Models
         public Guid TeamId { get; set; }
         public Guid StudentId { get; set; }
         public virtual ICollection<Executor> Executors { get; set; } = new List<Executor>();
+        public virtual ICollection<TaskComment> Comments { get; set; } = new List<TaskComment>();
 
         public DateTime AssignedAt { get; set; } = DateTime.UtcNow;
     }
