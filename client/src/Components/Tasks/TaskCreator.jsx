@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { createTask } from '../../api/task';
+import React, { useMemo, useState, useEffect } from 'react';
+import { createTask, updateTask } from '../../api/task';
 import './TaskCreator.css';
 
 const statusOptions = [
@@ -10,7 +10,7 @@ const statusOptions = [
     { value: 4, label: 'Отменена' }
 ];
 
-const TaskCreator = ({ projectId, team, tasks, onCreated, defaultParentId, lockParent = false, title = 'Создать задачу / подзадачу' }) => {
+const TaskCreator = ({ projectId, team, tasks, onCreated, defaultParentId, lockParent = false, title = 'Создать задачу / подзадачу', existingTask = null, onUpdated = null, onCancel = null }) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [durationDays, setDurationDays] = useState(1);
@@ -28,6 +28,20 @@ const TaskCreator = ({ projectId, team, tasks, onCreated, defaultParentId, lockP
     React.useEffect(() => {
         setParentTaskId(defaultParentId || '');
     }, [defaultParentId]);
+
+    useEffect(() => {
+        if (existingTask) {
+            setName(existingTask.Name || existingTask.name || '');
+            setDescription(existingTask.Description || existingTask.description || '');
+            setDurationDays(existingTask.DurationDays || existingTask.durationDays || 1);
+            setStatus(existingTask.Status ?? existingTask.status ?? 0);
+            const dl = existingTask.Deadline ? (typeof existingTask.Deadline === 'string' ? existingTask.Deadline.split('T')[0] : new Date(existingTask.Deadline).toISOString().split('T')[0]) : '';
+            setDeadline(dl);
+            setParentTaskId(existingTask.ParentTaskId || existingTask.parentTaskId || defaultParentId || '');
+            setDependencyIds(existingTask.DependencyIds ? [...existingTask.DependencyIds] : (existingTask.dependencyIds ? [...existingTask.dependencyIds] : []));
+            setExecutorIds(existingTask.ExecutorIds ? [...existingTask.ExecutorIds] : (existingTask.Executors ? existingTask.Executors.map(e => e.Id) : []));
+        }
+    }, [existingTask]);
 
     const resetForm = () => {
         setName('');
@@ -61,6 +75,11 @@ const TaskCreator = ({ projectId, team, tasks, onCreated, defaultParentId, lockP
             setError('Укажите название задачи.');
             return;
         }
+        
+        if (availableExecutors.length > 0 && executorIds.length === 0) {
+            setError('Выберите хотя бы одного исполнителя для задачи.');
+            return;
+        }
 
         try {
             setLoading(true);
@@ -76,12 +95,18 @@ const TaskCreator = ({ projectId, team, tasks, onCreated, defaultParentId, lockP
                 ExecutorIds: executorIds.length ? executorIds : null
             };
 
-            const created = await createTask(projectId, payload);
-            setSuccess('Задача создана');
-            resetForm();
-            onCreated?.(created);
+            if (existingTask) {
+                const updated = await updateTask(existingTask.Id || existingTask.id, payload);
+                setSuccess('Задача обновлена');
+                onUpdated?.(updated);
+            } else {
+                const created = await createTask(projectId, payload);
+                setSuccess('Задача создана');
+                resetForm();
+                onCreated?.(created);
+            }
         } catch (err) {
-            setError(err.message || 'Не удалось создать задачу');
+            setError(err.message || (existingTask ? 'Не удалось обновить задачу' : 'Не удалось создать задачу'));
         } finally {
             setLoading(false);
         }
@@ -205,11 +230,17 @@ const TaskCreator = ({ projectId, team, tasks, onCreated, defaultParentId, lockP
 
                 <div className="task-creator__actions">
                     <button type="submit" className="task-creator__submit" disabled={loading}>
-                        {loading ? 'Создаем...' : 'Создать задачу'}
+                        {loading ? (existingTask ? 'Сохраняем...' : 'Создаем...') : (existingTask ? 'Сохранить изменения' : 'Создать задачу')}
                     </button>
-                    <button type="button" className="task-creator__reset" onClick={resetForm} disabled={loading}>
-                        Сбросить
-                    </button>
+                    {existingTask ? (
+                        <button type="button" className="task-creator__reset" onClick={() => onCancel?.()} disabled={loading}>
+                            Отмена
+                        </button>
+                    ) : (
+                        <button type="button" className="task-creator__reset" onClick={resetForm} disabled={loading}>
+                            Сбросить
+                        </button>
+                    )}
                 </div>
             </form>
         </div>

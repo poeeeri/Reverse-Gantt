@@ -161,11 +161,112 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 8px;
+    position: relative;
+}
+
+.task-menu-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    color: #a3163a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.task-menu-btn:hover {
+    background: #ffe9ef;
+}
+
+.task-menu-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #ffc9d7;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(204, 29, 73, 0.15);
+    z-index: 1000;
+    min-width: 150px;
+    margin-top: 4px;
+    overflow: hidden;
+}
+
+.task-menu-item {
+    width: 100%;
+    padding: 10px 16px;
+    background: white;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    color: #cc1d49;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+    display: block;
+}
+
+.task-menu-item:hover {
+    background: #ffe9ef;
+}
+
+.task-menu-item:first-child {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.task-menu-item:last-child {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.task-menu-item-danger {
+    color: #ff6b6b !important;
+}
+
+.task-menu-item-danger:hover {
+    background: #ffe9ef !important;
+    color: #ff4757 !important;
+}
+
+.task-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+}
+
+.task-subtask-btn {
+    background: #ffe9ef;
+    color: #cc1d49;
+    border: 1px solid #ffc9d7;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.task-subtask-btn:hover {
+    background: #ffc9d7;
+    border-color: #cc1d49;
 }
 
 .task-name {
     color: #cc1d49;
     font-weight: 600;
+}
+
+.task-header > div {
+    min-width: 0;
+}
+
+.task-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .task-status {
@@ -319,6 +420,21 @@
     color: #155724;
 }
 
+.gantt-modal {
+    max-width: 95vw !important;
+    width: 95vw !important;
+}
+
+.gantt-modal-content {
+    padding: 20px;
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(90vh - 100px);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
 @media (max-width: 768px) {
     .detail-modal {
         max-height: 95vh;
@@ -344,5 +460,10 @@
     .save-btn,
     .cancel-btn {
         width: 100%;
+    }
+
+    .gantt-modal {
+        max-width: 100vw !important;
+        width: 100vw !important;
     }
 }

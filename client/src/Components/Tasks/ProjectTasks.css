@@ -11,11 +11,38 @@
     position: relative;
 }
 
+.tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    gap: 1rem;
+}
+
 .tasks-title {
     font-size: 1.6rem;
-    margin: 0 0 1.25rem;
+    margin: 0;
     color: #c23a5f;
     font-weight: 700;
+}
+
+.gantt-view-btn {
+    background: #cc1d49;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(204, 29, 73, 0.2);
+}
+
+.gantt-view-btn:hover {
+    background: #a3163a;
+    box-shadow: 0 4px 8px rgba(204, 29, 73, 0.3);
+    transform: translateY(-1px);
 }
 
 .tasks-filters {
