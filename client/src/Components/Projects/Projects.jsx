@@ -115,7 +115,9 @@ const Projects = ({ user }) => {
                 ) : (
                     projects.map(project => (
                         <div key={project.id} className="project-card-simple" onClick={() => handleProjectClick(project)}>
+
                             <div className="project-card-header">
+
                                 <div className="project-main-info">
                                     <h2 className="project-name">{project.name || 'Без названия'}</h2>
                                     <span className={`project-status ${getStatusClass(project.status)}`}>

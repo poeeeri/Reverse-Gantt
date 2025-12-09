@@ -243,7 +243,7 @@ const ProjectTasks = ({ user }) => {
                         <span className="deadline">{daysLeftText(task.deadline)}</span>
                         <span className="duration">Длительность: {task.durationDays} дн.</span>
                         <button className="comments-toggle" onClick={() => openComments(task)}>
-                            💬 {task.commentCount || 0}
+                            💬
                         </button>
                     </div>
                 </div>
@@ -275,7 +275,7 @@ const ProjectTasks = ({ user }) => {
 
                 <div className="tasks-filters">
                     <label htmlFor="statusFilter">Статус:</label>
-                    <select id="statusFilter" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                    <select id="statusFilter" className="filter-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
                         <option value="all">Все</option>
                         <option value="Created">Создано</option>
                         <option value="Available">Доступно</option>
