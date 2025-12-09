@@ -11,11 +11,38 @@
     position: relative;
 }
 
+.tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    gap: 1rem;
+}
+
 .tasks-title {
     font-size: 1.6rem;
-    margin: 0 0 1.25rem;
+    margin: 0;
     color: #c23a5f;
     font-weight: 700;
+}
+
+.gantt-view-btn {
+    background: #cc1d49;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(204, 29, 73, 0.2);
+}
+
+.gantt-view-btn:hover {
+    background: #a3163a;
+    box-shadow: 0 4px 8px rgba(204, 29, 73, 0.3);
+    transform: translateY(-1px);
 }
 
 .tasks-filters {
@@ -291,6 +318,70 @@
     .task-children {
         padding-left: 0.5rem;
     }
+}
+
+
+/* комменты */
+.comments-toggle {
+    background: none;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #666;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+}
+
+.comments-toggle:hover {
+    background-color: #f5f5f5;
+    border-color: #4a90e2;
+    color: #4a90e2;
+}
+
+.task-comments-section {
+    margin-top: 16px;
+    margin-left: 16px;
+    padding: 16px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+
+/* комменты */
+.comments-toggle {
+    background: none;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #666;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+}
+
+.comments-toggle:hover {
+    background-color: #f5f5f5;
+    border-color: #4a90e2;
+    color: #4a90e2;
+}
+
+.task-comments-section {
+    margin-top: 16px;
+    margin-left: 16px;
+    padding: 16px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
 }
 
 

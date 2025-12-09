@@ -11,6 +11,7 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated, teamId, teamNam
     const [error, setError] = useState('');
     const [teams, setTeams] = useState([]);
     const [selectedTeamId, setSelectedTeamId] = useState(teamId || '');
+    const [showTeamsList, setShowTeamsList] = useState(false);
 
     useEffect(() => {
         if (isOpen && !teamId) {
@@ -94,19 +95,25 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated, teamId, teamNam
 
                 <form className="form" onSubmit={handleSubmit}>
                     {!teamId && (
-                        <select
-                            value={selectedTeamId}
-                            onChange={e => setSelectedTeamId(e.target.value)}
-                            required
-                            disabled={loading}
-                        >
-                            <option value="">Выберите команду</option>
-                            {teams.map(team => (
-                                <option key={team.Id} value={team.Id}>
-                                    {team.Name}
-                                </option>
-                            ))}
-                        </select>
+                        <div style={{ position: 'relative' }}>
+                            <button type="button" className="team-select-btn" onClick={() => setShowTeamsList(s => !s)} disabled={loading}>
+                                {selectedTeamId ? (teams.find(t => t.Id === selectedTeamId)?.Name || 'Выбрана команда') : 'Выбрать команду'}
+                            </button>
+
+                            {showTeamsList && (
+                                <div className="team-dropdown">
+                                    {teams.length === 0 ? (
+                                        <div className="team-dropdown-empty">Команд нет</div>
+                                    ) : (
+                                        teams.map(t => (
+                                            <button key={t.Id} type="button" className="team-item" onClick={() => { setSelectedTeamId(t.Id); setShowTeamsList(false); }}>
+                                                {t.Name}
+                                            </button>
+                                        ))
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     )}
 
                     <input

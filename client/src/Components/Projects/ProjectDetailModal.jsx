@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { apiFetch } from '../../api/http';
-import { updateTask } from '../../api/task';
+import { updateTask, deleteTask } from '../../api/task';
 import TaskCreator from '../Tasks/TaskCreator';
+import ReverseGanttChart from '../Gantt/ReverseGanttChart';
+import GanttTaskReactWrapper from '../Gantt/GanttTaskReactWrapper';
 import './ProjectDetailModal.css';
 
 const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
@@ -14,35 +16,56 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
     const [taskModalOpen, setTaskModalOpen] = useState(false);
     const [editTask, setEditTask] = useState(null);
     const [taskEditError, setTaskEditError] = useState('');
-    const [taskEditLoading, setTaskEditLoading] = useState(false);
     const [subtaskParent, setSubtaskParent] = useState(null);
     const [selectedExecutors, setSelectedExecutors] = useState([]);
+    const [ganttModalOpen, setGanttModalOpen] = useState(false);
+    const [loadingDetails, setLoadingDetails] = useState(false);
+    const [openTaskMenu, setOpenTaskMenu] = useState(null);
     const [editDeadlineLimit, setEditDeadlineLimit] = useState(null);
 
     useEffect(() => {
         if (project && isOpen) {
             setEditedProject({
-                name: project.name,
-                description: project.description,
-                subject: project.subject,
-                status: project.status,
-                finalDeadline: project.finalDeadline.split('T')[0]
+                name: project.name || '',
+                description: project.description || '',
+                subject: project.subject || '',
+                status: project.status || 0,
+                finalDeadline: project.finalDeadline ? (typeof project.finalDeadline === 'string' ? project.finalDeadline.split('T')[0] : new Date(project.finalDeadline).toISOString().split('T')[0]) : ''
             });
             loadProjectDetails();
         }
     }, [project, isOpen]);
 
+    useEffect(() => {
+        if (ganttModalOpen) {
+            const prev = document.documentElement.lang;
+            document.documentElement.lang = 'ru';
+            return () => { document.documentElement.lang = prev || ''; };
+        }
+    }, [ganttModalOpen]);
+
     const loadProjectDetails = async () => {
+        setLoadingDetails(true);
+        setError('');
         try {
             const projectDetails = await apiFetch(`/projects/${project.id}`);
             setTasks(projectDetails.ProjectTasks || []);
 
             if (project.teamId) {
-                const teamData = await apiFetch(`/teams/${project.teamId}`);
-                setTeam(teamData);
+                try {
+                    const teamData = await apiFetch(`/teams/${project.teamId}`);
+                    setTeam(teamData);
+                } catch (teamErr) {
+                    console.error('Error loading team:', teamErr);
+                    setTeam(null);
+                }
             }
         } catch (err) {
             console.error('Error loading project details:', err);
+            setError('Не удалось загрузить детали проекта');
+            setTasks([]);
+        } finally {
+            setLoadingDetails(false);
         }
     };
 
@@ -65,6 +88,14 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
         if (isUserLeader()) return true;
         if (!user) return false;
         return task.Executors?.some((ex) => ex.StudentId === user.id);
+    };
+
+    const canEditTask = (task) => {
+        return !!task;
+    };
+
+    const canDeleteTask = (task) => {
+        return !!task;
     };
 
     const openEditTask = (task) => {
@@ -173,8 +204,24 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
     };
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('ru-RU');
+        if (!dateString) return 'Не указано';
+        try {
+            return new Date(dateString).toLocaleDateString('ru-RU');
+        } catch (e) {
+            return 'Неверная дата';
+        }
     };
+
+    const ganttTasks = useMemo(() => {
+        const mainTasks = tasks.filter(t => !t.ParentTaskId);
+        return mainTasks.map(task => ({
+            id: task.Id,
+            name: task.Name || 'Без названия',
+            duration: task.DurationDays || 1,
+            dependencies: task.DependencyIds || [],
+            assignedAt: task.AssignedAt || task.assignedAt || null
+        }));
+    }, [tasks]);
 
     if (!isOpen || !project) return null;
 
@@ -212,7 +259,12 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                 </div>
 
                 <div className="detail-modal-content">
-                    <div className="detail-section">
+                    {error && <div className="error-message" style={{ color: '#ff6b6b', padding: '10px', marginBottom: '15px' }}>{error}</div>}
+                    {loadingDetails ? (
+                        <div style={{ padding: '20px', textAlign: 'center' }}>Загрузка...</div>
+                    ) : (
+                        <>
+                            <div className="detail-section">
                         <h3>Основная информация</h3>
                         <div className="detail-info-grid">
                             <div className="detail-info-item">
@@ -281,16 +333,32 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                                 )}
                             </div>
                         </div>
+                        {!isEditing && project.finalDeadline && (
+                            <div style={{ marginTop: '15px' }}>
+                                <button className="edit-project-btn" onClick={() => setGanttModalOpen(true)}>
+                                    📊 Посмотреть диаграмму Ганта
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="detail-section">
-                        <div className="tasks-header-row">
+                        <div className="tasks-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                             <h3>Задачи проекта ({tasks.length})</h3>
-                            {isUserLeader() && (
+                            {team && (isUserLeader() || team.Executors?.some(ex => ex.StudentId === user?.id)) && (
                                 <button
                                     className="open-task-modal-btn"
                                     type="button"
                                     onClick={() => setTaskModalOpen(true)}
+                                    style={{
+                                        background: '#cc1d49',
+                                        color: 'white',
+                                        border: 'none',
+                                        padding: '8px 16px',
+                                        borderRadius: '6px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600'
+                                    }}
                                 >
                                     + Создать задачу
                                 </button>
@@ -301,22 +369,76 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                                 tasks.map(task => (
                                     <div key={task.Id} className="task-item">
                                         <div className="task-header">
-                                            <span className="task-name">{task.Name}</span>
-                                            <span className="task-status">{getTaskStatusText(task.Status)}</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                                                <span className="task-name">{task.Name}</span>
+                                                <span className="task-status">{getTaskStatusText(task.Status)}</span>
+                                            </div>
+                                            <div style={{ position: 'relative' }}>
+                                                <button
+                                                    className="task-menu-btn"
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setOpenTaskMenu(openTaskMenu === task.Id ? null : task.Id);
+                                                    }}
+                                                    aria-label="Меню задачи"
+                                                >
+                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                        <circle cx="12" cy="5" r="1"/>
+                                                        <circle cx="12" cy="12" r="1"/>
+                                                        <circle cx="12" cy="19" r="1"/>
+                                                    </svg>
+                                                </button>
+                                                {openTaskMenu === task.Id && (
+                                                    <div className="task-menu-dropdown">
+                                                        {canEditTask(task) && (
+                                                            <button
+                                                                className="task-menu-item"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    openEditTask(task);
+                                                                    setOpenTaskMenu(null);
+                                                                }}
+                                                            >
+                                                                Редактировать
+                                                            </button>
+                                                        )}
+
+                                                        {canDeleteTask(task) && (
+                                                            <button
+                                                                className="task-menu-item task-menu-item-danger"
+                                                                onClick={async (e) => {
+                                                                    e.stopPropagation();
+                                                                    setOpenTaskMenu(null);
+
+                                                                    const confirmMessage = task.Subtasks?.length > 0 
+                                                                        ? `Внимание! У этой задачи есть подзадачи (${task.Subtasks.length}). Они также будут удалены. Вы уверены, что хотите удалить эту задачу?`
+                                                                        : 'Вы уверены, что хотите удалить эту задачу?';
+
+                                                                    if (window.confirm(confirmMessage)) {
+                                                                        try {
+                                                                            await deleteTask(task.Id);
+                                                                            await loadProjectDetails();
+                                                                            setError('');
+                                                                        } catch (err) {
+                                                                            const errorMessage = err.message || 'Неизвестная ошибка';
+                                                                            setError('Ошибка при удалении задачи: ' + errorMessage);
+                                                                            console.error('Error deleting task:', err);
+                                                                        }
+                                                                    }
+                                                                }}
+                                                            >
+                                                                Удалить
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                         {task.Description && (
                                             <p className="task-description">{task.Description}</p>
                                         )}
                                         <div className="task-actions">
-                                            {isUserLeader() && (
-                                                <button
-                                                    className="task-edit-btn"
-                                                    type="button"
-                                                    onClick={() => openEditTask(task)}
-                                                >
-                                                    Редактировать
-                                                </button>
-                                            )}
                                             {canCreateSubtask(task) && (
                                                 <button
                                                     className="task-subtask-btn"
@@ -364,6 +486,8 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                             </div>
                         </div>
                     )}
+                            </>
+                    )}
                 </div>
 
                 {isEditing && (
@@ -389,7 +513,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
             </div>
         </div>
 
-        {taskModalOpen && isUserLeader() && team && (
+        {taskModalOpen && team && (isUserLeader() || team.Executors?.some(ex => ex.StudentId === user?.id)) && (
             <div className="task-creator-modal-backdrop" onClick={() => setTaskModalOpen(false)}>
                 <div className="task-creator-modal" onClick={(e) => e.stopPropagation()}>
                     <div className="task-creator-modal__header">
@@ -429,108 +553,88 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
             </div>
         )}
 
-        {editTask && isUserLeader() && (
+        {editTask && canEditTask(editTask) && (
             <div className="task-creator-modal-backdrop" onClick={() => setEditTask(null)}>
                 <div className="task-creator-modal" onClick={(e) => e.stopPropagation()}>
                     <div className="task-creator-modal__header">
                         <h3>Редактировать задачу</h3>
                         <button className="task-creator-modal__close" onClick={() => setEditTask(null)}>×</button>
                     </div>
-                    <form className="task-creator__form" onSubmit={handleTaskUpdate}>
-                        <div className="task-creator__grid">
-                            <label className="task-creator__field">
-                                <span>Название *</span>
-                                <input
-                                    type="text"
-                                    value={editTask.Name}
-                                    onChange={(e) => setEditTask({ ...editTask, Name: e.target.value })}
-                                    required
-                                />
-                            </label>
-                            <label className="task-creator__field">
-                                <span>Длительность (дней)</span>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    value={editTask.DurationDays}
-                                    onChange={(e) => setEditTask({ ...editTask, DurationDays: e.target.value })}
-                                />
-                            </label>
-                            <label className="task-creator__field">
-                                <span>Дедлайн</span>
-                                <input
-                                    type="date"
-                                    value={editTask.DeadlineDateOnly || ''}
-                                    onChange={(e) => setEditTask({ ...editTask, DeadlineDateOnly: e.target.value })}
-                                />
-                            </label>
-                            <label className="task-creator__field">
-                                <span>Статус</span>
-                                <select
-                                    value={editTask.Status}
-                                    onChange={(e) => setEditTask({ ...editTask, Status: e.target.value })}
-                                >
-                                    <option value={0}>Создана</option>
-                                    <option value={1}>Доступна</option>
-                                    <option value={2}>В процессе</option>
-                                    <option value={3}>Сделано</option>
-                                    <option value={4}>Отменена</option>
-                                </select>
-                            </label>
-                            <label className="task-creator__field task-creator__field--full">
-                                <span>Описание</span>
-                                <textarea
-                                    rows="3"
-                                    value={editTask.Description || ''}
-                                    onChange={(e) => setEditTask({ ...editTask, Description: e.target.value })}
-                                />
-                            </label>
+                    <TaskCreator
+                        projectId={project.id}
+                        team={team}
+                        tasks={tasks}
+                        existingTask={editTask}
+                        onUpdated={async (updated) => {
+                            await loadProjectDetails();
+                            setEditTask(null);
+                        }}
+                        onCancel={() => setEditTask(null)}
+                        title={`Редактировать: ${editTask.Name || ''}`}
+                    />
+                </div>
+            </div>
+        )}
 
-                            <div className="task-creator__list task-creator__field--full">
-                                <div className="task-creator__list-title">Исполнители</div>
-                                <div className="task-creator__checkboxes">
-                                    {team?.Executors?.length ? (
-                                        team.Executors.map((ex) => (
-                                            <label key={ex.Id} className="task-creator__checkbox">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedExecutors.includes(ex.Id)}
-                                                    onChange={() => {
-                                                        setSelectedExecutors((prev) =>
-                                                            prev.includes(ex.Id)
-                                                                ? prev.filter((id) => id !== ex.Id)
-                                                                : [...prev, ex.Id]
-                                                        );
-                                                    }}
-                                                />
-                                                <span>{ex.StudentName || 'Без имени'}</span>
-                                            </label>
-                                        ))
-                                    ) : (
-                                        <span className="task-creator__empty">Нет исполнителей</span>
-                                    )}
-                                </div>
-                            </div>
+        {openTaskMenu && (
+            <div 
+                style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}
+                onClick={() => setOpenTaskMenu(null)}
+            />
+        )}
+
+        {ganttModalOpen && (
+            <div className="detail-modal-overlay" onClick={() => setGanttModalOpen(false)}>
+                <div className="detail-modal gantt-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '95vw', overflow: 'auto' }}>
+                    <div className="detail-modal-header">
+                        <h2>Диаграмма Ганта проекта</h2>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <button className="detail-modal-close" onClick={() => setGanttModalOpen(false)}>×</button>
                         </div>
+                    </div>
+                    <div className="gantt-modal-content">
+                        {ganttTasks.length > 0 && project.finalDeadline ? (
+                            <GanttTaskReactWrapper
+                                tasks={ganttTasks}
+                                projectDeadline={project.finalDeadline}
+                                onEditTask={(taskId) => {
+                                    const t = tasks.find(tt => (tt.Id === taskId) || (tt.id === taskId));
+                                    if (t) openEditTask(t);
+                                }}
+                                onDeleteTask={async (taskId) => {
+                                    const t = tasks.find(tt => (tt.Id === taskId) || (tt.id === taskId));
+                                    if (!t) return;
 
-                        {taskEditError && (
-                            <div className="task-creator__message error">{taskEditError}</div>
+                                    if (!canDeleteTask(t)) {
+                                        setError('У вас нет прав для удаления этой задачи');
+                                        return;
+                                    }
+
+                                    const confirmMessage = t?.Subtasks?.length > 0
+                                        ? `Внимание! У этой задачи есть подзадачи (${t.Subtasks.length}). Они также будут удалены. Вы уверены, что хотите удалить эту задачу?`
+                                        : 'Вы уверены, что хотите удалить эту задачу?';
+
+                                    if (!window.confirm(confirmMessage)) return;
+
+                                    try {
+                                        await deleteTask(taskId);
+                                        await loadProjectDetails();
+                                        setError('');
+                                    } catch (err) {
+                                        const errorMessage = err.message || 'Неизвестная ошибка';
+                                        setError('Ошибка при удалении задачи: ' + errorMessage);
+                                        console.error('Error deleting task from Gantt:', err);
+                                    }
+                                }}
+                                hasActions={(taskId) => {
+                                    const t = tasks.find(tt => (tt.Id === taskId) || (tt.id === taskId));
+                                    return !!t && (canEditTask(t) || canDeleteTask(t));
+                                }}
+                            />
+                        ) : (
+                            <p>Нет задач для отображения или не указан дедлайн проекта</p>
                         )}
-
-                        <div className="task-creator__actions">
-                            <button type="submit" className="task-creator__submit" disabled={taskEditLoading}>
-                                {taskEditLoading ? 'Сохраняем...' : 'Сохранить изменения'}
-                            </button>
-                            <button
-                                type="button"
-                                className="task-creator__reset"
-                                onClick={() => setEditTask(null)}
-                                disabled={taskEditLoading}
-                            >
-                                Отмена
-                            </button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         )}
