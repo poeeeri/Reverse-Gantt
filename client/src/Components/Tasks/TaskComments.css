@@ -1,0 +1,91 @@
+.comments-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.comments-modal {
+    background: #ffe6f0;
+    padding: 20px;
+    width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    position: relative;
+    font-family: Arial, sans-serif;
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    border: none;
+    background: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #ff4d94;
+}
+
+.comment-item {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 8px;
+    background: #ffd9e6;
+    position: relative;
+}
+
+.comment-author {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #b30059;
+}
+
+.comment-content {
+    color: #4d001f;
+}
+
+.comment-actions button {
+    margin-right: 5px;
+    border: none;
+    background: #ff80bf;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.comment-actions button:hover {
+    background: #ff4d94;
+}
+
+.comment-add textarea {
+    width: 100%;
+    min-height: 50px;
+    margin-bottom: 5px;
+    border-radius: 8px;
+    border: 1px solid #ffb3d9;
+    padding: 5px;
+}
+
+.comment-add button {
+    background: #ff66b3;
+    border: none;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.comment-add button:hover {
+    background: #ff1a75;
+}
