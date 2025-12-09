@@ -84,5 +84,33 @@ namespace gantt_server.Controllers
             var dto = await _projectTaskService.UnassignExecutorAsync(id, executorId, ct);
             return dto is null ? NotFound() : Ok(dto);
         }
+
+        [HttpGet("tasks/{id:guid}/comments")]
+        public async Task<ActionResult<IEnumerable<TaskCommentDto>>> GetComments(Guid id, CancellationToken ct)
+        {
+            var items = await _projectTaskService.GetCommentsAsync(id, ct);
+            return Ok(items);
+        }
+
+        [HttpPost("tasks/{id:guid}/comments")]
+        public async Task<ActionResult<TaskCommentDto>> AddComment(Guid id, [FromBody] TaskCommentCreateDto dto, CancellationToken ct)
+        {
+            var created = await _projectTaskService.AddCommentAsync(id, dto, ct);
+            return created is null ? NotFound() : Ok(created);
+        }
+
+        [HttpPatch("tasks/{taskId:guid}/comments/{commentId:guid}")]
+        public async Task<ActionResult<TaskCommentDto>> UpdateComment(Guid taskId, Guid commentId, [FromBody] TaskCommentUpdateDto dto, CancellationToken ct)
+        {
+            var updated = await _projectTaskService.UpdateCommentAsync(taskId, commentId, dto, ct);
+            return updated is null ? NotFound() : Ok(updated);
+        }
+
+        [HttpDelete("tasks/{taskId:guid}/comments/{commentId:guid}")]
+        public async Task<IActionResult> DeleteComment(Guid taskId, Guid commentId, CancellationToken ct)
+        {
+            var ok = await _projectTaskService.DeleteCommentAsync(taskId, commentId, ct);
+            return ok ? NoContent() : NotFound();
+        }
     }
 }

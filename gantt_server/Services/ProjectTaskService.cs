@@ -18,7 +18,8 @@ namespace gantt_server.Services
                 .Include(t => t.Subtasks)
                 .Include(t => t.Dependencies)
                 .Include(t => t.DependentTasks)
-                .Include(t => t.Executors).ThenInclude(e => e.Student);
+                .Include(t => t.Executors).ThenInclude(e => e.Student)
+                .Include(t => t.Comments).ThenInclude(c => c.Student);
 
         public async Task<IReadOnlyList<ProjectTaskDto>> GetByProjectAsync(Guid projectId, CancellationToken ct)
         {
@@ -157,6 +158,7 @@ namespace gantt_server.Services
         {
             var task = await _db.ProjectTasks
                 .Include(t => t.Executors)
+                .Include(t => t.Comments)
                 .FirstOrDefaultAsync(t => t.Id == id, ct);
 
             if (task is null)
@@ -179,6 +181,7 @@ namespace gantt_server.Services
         {
             var task = await _db.ProjectTasks
                 .Include(t => t.Executors)
+                .Include(t => t.Comments)
                 .FirstOrDefaultAsync(t => t.Id == id, ct);
 
             if (task is null)
@@ -190,6 +193,69 @@ namespace gantt_server.Services
 
             await _db.SaveChangesAsync(ct);
             return (await QueryWithDetails().AsNoTracking().FirstAsync(t => t.Id == id, ct)).ToDto();
+        }
+
+        public async Task<IReadOnlyList<TaskCommentDto>> GetCommentsAsync(Guid taskId, CancellationToken ct)
+        {
+            var task = await _db.ProjectTasks
+                .Include(t => t.Comments).ThenInclude(c => c.Student)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Id == taskId, ct);
+
+            if (task is null) return Array.Empty<TaskCommentDto>();
+            return task.Comments.OrderBy(c => c.CreatedAt).Select(c => c.ToDto()).ToList();
+        }
+
+        public async Task<TaskCommentDto?> AddCommentAsync(Guid taskId, TaskCommentCreateDto dto, CancellationToken ct)
+        {
+            var task = await _db.ProjectTasks.FirstOrDefaultAsync(t => t.Id == taskId, ct);
+            if (task is null) return null;
+
+            var student = await _db.Students.AsNoTracking().FirstOrDefaultAsync(s => s.Id == dto.StudentId, ct);
+            if (student is null)
+                throw new InvalidOperationException("Студент не найден");
+
+            var comment = new TaskComment
+            {
+                TaskId = taskId,
+                StudentId = dto.StudentId,
+                Content = dto.Content,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _db.TaskComments.Add(comment);
+            await _db.SaveChangesAsync(ct);
+
+            var created = await _db.TaskComments
+                .Include(c => c.Student)
+                .AsNoTracking()
+                .FirstAsync(c => c.Id == comment.Id, ct);
+
+            return created.ToDto();
+        }
+
+        public async Task<TaskCommentDto?> UpdateCommentAsync(Guid taskId, Guid commentId, TaskCommentUpdateDto dto, CancellationToken ct)
+        {
+            var comment = await _db.TaskComments
+                .Include(c => c.Student)
+                .FirstOrDefaultAsync(c => c.Id == commentId && c.TaskId == taskId, ct);
+
+            if (comment is null) return null;
+
+            comment.Content = dto.Content;
+            await _db.SaveChangesAsync(ct);
+
+            return comment.ToDto();
+        }
+
+        public async Task<bool> DeleteCommentAsync(Guid taskId, Guid commentId, CancellationToken ct)
+        {
+            var comment = await _db.TaskComments.FirstOrDefaultAsync(c => c.Id == commentId && c.TaskId == taskId, ct);
+            if (comment is null) return false;
+
+            _db.TaskComments.Remove(comment);
+            await _db.SaveChangesAsync(ct);
+            return true;
         }
 
         private async Task<Project> EnsureProjectExists(Guid projectId, CancellationToken ct)
