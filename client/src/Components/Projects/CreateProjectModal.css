@@ -150,3 +150,41 @@
         align-self: flex-start;
     }
 }
+
+.team-select-btn {
+    background: white;
+    color: #cc1d49;
+    border: 1px solid #ffc9d7;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.team-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    background: white;
+    border: 1px solid #ffd7e3;
+    box-shadow: 0 10px 30px rgba(204,29,73,0.08);
+    border-radius: 8px;
+    z-index: 1100;
+    min-width: 220px;
+    max-height: 220px;
+    overflow: auto;
+}
+
+.team-item {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    text-align: left;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.team-item:hover { background: #fff0f4; }
+
+.team-dropdown-empty { padding: 10px 12px; color: #a3163a; }

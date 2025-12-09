@@ -46,3 +46,9 @@ export const unassignTaskExecutor = async (taskId, executorId) => {
         method: 'DELETE'
     });
 };
+
+export const deleteTask = async (taskId) => {
+    return apiFetch(`/tasks/${taskId}`, {
+        method: 'DELETE'
+    });
+};
