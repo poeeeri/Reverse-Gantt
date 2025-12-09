@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { getStudentTeamsAndTasks } from '../../api/student';
+import ReverseGanttChart from '../Gantt/ReverseGanttChart';
+import '../Projects/ProjectDetailModal.css';
 import './ProjectTasks.css';
 import './ProjectTasks.anim.css';
 
@@ -84,6 +86,7 @@ const ProjectTasks = ({ user }) => {
     const [assignedTasks, setAssignedTasks] = useState([]);
     const [collapsedTasks, setCollapsedTasks] = useState(() => new Set());
     const [statusFilter, setStatusFilter] = useState('all');
+    const [ganttModalOpen, setGanttModalOpen] = useState(false);
 
     const toggleTaskCollapse = (id) => {
         setCollapsedTasks(prev => {
@@ -180,6 +183,32 @@ const ProjectTasks = ({ user }) => {
         return filterAndPromote(baseTree);
     }, [ownTasks, statusFilter]);
 
+    const ganttTasks = useMemo(() => {
+        const mainTasks = ownTasks.filter(t => !t.parentTaskId);
+        return mainTasks.map(task => ({
+            id: task.id,
+            name: task.name || 'Без названия',
+            duration: task.durationDays || 1,
+            dependencies: task.dependencyIds || []
+        }));
+    }, [ownTasks]);
+
+    const maxDeadline = useMemo(() => {
+        const deadlines = ownTasks
+            .filter(t => t.deadline)
+            .map(t => new Date(t.deadline));
+        
+        if (deadlines.length === 0) {
+            const future = new Date();
+            future.setDate(future.getDate() + 30);
+            return future.toISOString();
+        }
+        
+        const max = new Date(Math.max(...deadlines.map(d => d.getTime())));
+        max.setDate(max.getDate() + 7);
+        return max.toISOString();
+    }, [ownTasks]);
+
     const renderBranch = (task, level = 0) => {
         const hasChildren = task.children && task.children.length > 0;
         const isCollapsed = collapsedTasks.has(task.id);
@@ -255,8 +284,19 @@ const ProjectTasks = ({ user }) => {
     }
 
     return (
+        <>
         <div className="tasks-wrapper">
-            <h2 className="tasks-title">Статистика задач</h2>
+            <div className="tasks-header">
+                <h2 className="tasks-title">Статистика задач</h2>
+                {ganttTasks.length > 0 && (
+                    <button 
+                        className="gantt-view-btn"
+                        onClick={() => setGanttModalOpen(true)}
+                    >
+                        📊 Диаграмма Ганта
+                    </button>
+                )}
+            </div>
 
             <div className="tasks-filters">
                 <label className="filter-label" htmlFor="statusFilter">Статус:</label>
@@ -282,6 +322,28 @@ const ProjectTasks = ({ user }) => {
                 {taskTree.map((task) => renderBranch(task, 0))}
             </div>
         </div>
+
+        {ganttModalOpen && (
+            <div className="detail-modal-overlay" onClick={() => setGanttModalOpen(false)}>
+                <div className="detail-modal gantt-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '95vw', overflow: 'auto' }}>
+                    <div className="detail-modal-header">
+                        <h2>Диаграмма Ганта моих задач</h2>
+                        <button className="detail-modal-close" onClick={() => setGanttModalOpen(false)}>×</button>
+                    </div>
+                    <div className="gantt-modal-content">
+                        {ganttTasks.length > 0 ? (
+                            <ReverseGanttChart 
+                                tasks={ganttTasks} 
+                                projectDeadline={maxDeadline}
+                            />
+                        ) : (
+                            <p>Нет задач для отображения</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+        )}
+        </>
     );
 };
 
