@@ -12,6 +12,7 @@ namespace gantt_server.Data
         public DbSet<Executor> Executors => Set<Executor>();
         public DbSet<Project> Projects => Set<Project>();
         public DbSet<ProjectTask> ProjectTasks => Set<ProjectTask>();
+        public DbSet<TaskComment> TaskComments => Set<TaskComment>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -22,6 +23,7 @@ namespace gantt_server.Data
             OnModelProjectTaskCreating(modelBuilder);
             OnModelTaskDependenciesCreating(modelBuilder);
             OnModelTaskExecutorsCreating(modelBuilder);
+            OnModelTaskCommentsCreating(modelBuilder);
         }
 
         private static void OnModelStudentCreating(ModelBuilder modelBuilder)
@@ -127,6 +129,23 @@ namespace gantt_server.Data
                         j.ToTable("TaskExecutors");
                         j.HasKey("TaskId", "ExecutorId");
                     });
+        }
+
+        private static void OnModelTaskCommentsCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<TaskComment>().ToTable("TaskComments");
+
+            modelBuilder.Entity<TaskComment>()
+                .HasOne(c => c.Task)
+                .WithMany(t => t.Comments)
+                .HasForeignKey(c => c.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TaskComment>()
+                .HasOne(c => c.Student)
+                .WithMany()
+                .HasForeignKey(c => c.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

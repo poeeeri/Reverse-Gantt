@@ -20,6 +20,7 @@ namespace gantt_server.Mappings
             DependencyIds = task.Dependencies.Select(t => t.Id).ToArray(),
             DependentIds = task.DependentTasks.Select(t => t.Id).ToArray(),
             Executors = task.Executors.Select(e => e.ToDto()).ToArray(),
+            Comments = task.Comments.Select(c => c.ToDto()).ToArray(),
             AssignedAt = task.AssignedAt
         };
 
@@ -68,6 +69,16 @@ namespace gantt_server.Mappings
             StudentName = $"{executor.Student.FirstName} {executor.Student.LastName}".Trim(),
             Role = executor.Role,
             JoinedAt = executor.JoinedAt
+        };
+
+        public static TaskCommentDto ToDto(this TaskComment comment) => new()
+        {
+            Id = comment.Id,
+            TaskId = comment.TaskId,
+            StudentId = comment.StudentId,
+            AuthorName = $"{comment.Student.FirstName} {comment.Student.LastName}".Trim(),
+            Content = comment.Content,
+            CreatedAt = comment.CreatedAt
         };
     }
 }
