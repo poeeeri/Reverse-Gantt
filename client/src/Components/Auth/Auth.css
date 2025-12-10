@@ -1,0 +1,116 @@
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    background: #ffe9ef;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 420px;
+    padding: 30px;
+    border-radius: 12px;
+    background: white;
+    border: 1px solid #ffc9d7;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 25px 0;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-input {
+    border-radius: 8px;
+    border: 2px solid #ffc9d7;
+    padding: 14px;
+    font-size: 1em;
+    font-family: inherit;
+    background-color: white;
+    color: #333;
+    transition: border-color 0.3s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.auth-input:focus {
+    outline: none;
+    border-color: #fc809f;
+}
+
+.auth-input:hover {
+    border-color: #fc809f;
+}
+
+.auth-button {
+    border-radius: 10px;
+    border: none;
+    padding: 14px;
+    font-size: 1em;
+    font-weight: 600;
+    font-family: inherit;
+    background: #ffc9d7;
+    color: #cc1d49;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 10px;
+}
+
+.auth-button:hover {
+    background: #ffb3c4;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.auth-button:disabled {
+    background: #ffe9ef;
+    color: #ffc9d7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.auth-toggle {
+    color: #a3163a;
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.auth-toggle span {
+    color: #cc1d49;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 5px;
+}
+
+.auth-toggle span:hover {
+    color: #fc809f;
+}
+
+h1 {
+    font-size: 2.2em;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+    color: #cc1d49;
+    text-align: center;
+}
+
+.error {
+    color: #cc1d49;
+    background: #ffe9ef;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ffc9d7;
+    margin: 10px 0;
+    text-align: center;
+    font-weight: 500;
+}
