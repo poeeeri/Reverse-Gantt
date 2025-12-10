@@ -144,14 +144,15 @@
 
 .project-meta-info {
     display: flex;
-    gap: 30px;
+    gap: 20px;
+    margin-top: 6px;
     flex-wrap: wrap;
 }
 
 .project-meta-item {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    gap: 6px;
+    align-items: center;
 }
 
 .project-meta-item strong {

@@ -44,10 +44,18 @@ namespace gantt_server.Controllers
         }
 
         [HttpDelete("tasks/{id:guid}")]
-        public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+        public async Task<IActionResult> Delete(Guid id, [FromQuery] Guid actorExecutorId, CancellationToken ct)
         {
-            var ok = await _projectTaskService.DeleteAsync(id, ct);
-            return ok ? NoContent() : NotFound();
+            if (actorExecutorId == Guid.Empty) return BadRequest(new { error = "actorExecutorId required" });
+            try
+            {
+                var ok = await _projectTaskService.DeleteAsync(id, actorExecutorId, ct);
+                return ok ? NoContent() : NotFound();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Forbid(ex.Message);
+            }
         }
 
         [HttpPatch("tasks/{id:guid}/status")]

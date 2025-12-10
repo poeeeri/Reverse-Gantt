@@ -10,7 +10,7 @@ const statusOptions = [
     { value: 4, label: 'Отменена' }
 ];
 
-const TaskCreator = ({ projectId, team, tasks, onCreated, defaultParentId, lockParent = false, title = 'Создать задачу / подзадачу', existingTask = null, onUpdated = null, onCancel = null }) => {
+const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId, lockParent = false, title = 'Создать задачу / подзадачу', existingTask = null, onUpdated = null, onCancel = null }) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [durationDays, setDurationDays] = useState(1);
@@ -112,7 +112,8 @@ const TaskCreator = ({ projectId, team, tasks, onCreated, defaultParentId, lockP
                 ParentTaskId: parentTaskId || null,
                 TeamId: team?.Id,
                 DependencyIds: dependencyIds.length ? dependencyIds : null,
-                ExecutorIds: executorIds.length ? executorIds : null
+                ExecutorIds: executorIds.length ? executorIds : null,
+                ActorExecutorId: team?.Executors?.find((ex) => ex.StudentId === user?.id)?.Id
             };
 
             if (existingTask) {

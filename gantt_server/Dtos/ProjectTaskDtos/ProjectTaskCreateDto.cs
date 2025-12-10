@@ -22,6 +22,7 @@ namespace gantt_server.Dtos.ProjectTaskDtos
         public Guid ProjectId { get; set; }
 
         public Guid TeamId { get; set; }
+        public Guid ActorExecutorId { get; set; }
 
         public IList<Guid>? DependencyIds { get; set; }
 

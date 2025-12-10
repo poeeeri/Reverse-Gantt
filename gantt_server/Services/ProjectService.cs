@@ -53,10 +53,17 @@ namespace gantt_server.Services
             return await GetByIdAsync(id, ct);
         }
 
-        public async Task<bool> DeleteAsync(Guid id, CancellationToken ct)
+        public async Task<bool> DeleteAsync(Guid id, Guid actorExecutorId, CancellationToken ct)
         {
-            var entity = await _db.Projects.FirstOrDefaultAsync(p => p.Id == id, ct);
+            var entity = await _db.Projects
+                .Include(p => p.Team)
+                    .ThenInclude(t => t.Executors)
+                .FirstOrDefaultAsync(p => p.Id == id, ct);
             if (entity is null) 
+                return false;
+
+            var actor = entity.Team.Executors.FirstOrDefault(e => e.Id == actorExecutorId);
+            if (actor is null || actor.Role != ExecutorRole.Leader)
                 return false;
 
             _db.Projects.Remove(entity);
