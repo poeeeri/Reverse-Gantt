@@ -345,7 +345,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                     <div className="detail-section">
                         <div className="tasks-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                             <h3>Задачи проекта ({tasks.length})</h3>
-                            {team && (isUserLeader() || team.Executors?.some(ex => ex.StudentId === user?.id)) && (
+                            {team && isUserLeader() && (
                                 <button
                                     className="open-task-modal-btn"
                                     type="button"
@@ -374,21 +374,23 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                                                 <span className="task-status">{getTaskStatusText(task.Status)}</span>
                                             </div>
                                             <div style={{ position: 'relative' }}>
-                                                <button
-                                                    className="task-menu-btn"
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setOpenTaskMenu(openTaskMenu === task.Id ? null : task.Id);
-                                                    }}
-                                                    aria-label="Меню задачи"
-                                                >
-                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                        <circle cx="12" cy="5" r="1"/>
-                                                        <circle cx="12" cy="12" r="1"/>
-                                                        <circle cx="12" cy="19" r="1"/>
-                                                    </svg>
-                                                </button>
+                                                {isUserLeader() && (
+                                                    <button
+                                                        className="task-menu-btn"
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setOpenTaskMenu(openTaskMenu === task.Id ? null : task.Id);
+                                                        }}
+                                                        aria-label="Меню задачи"
+                                                    >
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                            <circle cx="12" cy="5" r="1"/>
+                                                            <circle cx="12" cy="12" r="1"/>
+                                                            <circle cx="12" cy="19" r="1"/>
+                                                        </svg>
+                                                    </button>
+                                                )}
                                                 {openTaskMenu === task.Id && (
                                                     <div className="task-menu-dropdown">
                                                         {canEditTask(task) && (
@@ -404,7 +406,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                                                             </button>
                                                         )}
 
-                                                        {canDeleteTask(task) && (
+                                                        {isUserLeader() && (
                                                             <button
                                                                 className="task-menu-item task-menu-item-danger"
                                                                 onClick={async (e) => {
@@ -417,7 +419,8 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
 
                                                                     if (window.confirm(confirmMessage)) {
                                                                         try {
-                                                                            await deleteTask(task.Id);
+                                                                            const meExecutor = team?.Executors?.find(ex => ex.StudentId === user?.id);
+                                                                            await deleteTask(task.Id, meExecutor?.Id);
                                                                             await loadProjectDetails();
                                                                             setError('');
                                                                         } catch (err) {
@@ -524,6 +527,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                         projectId={project.id}
                         team={team}
                         tasks={tasks}
+                        user={user}
                         onCreated={handleTaskCreated}
                     />
                 </div>
@@ -541,6 +545,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                         projectId={project.id}
                         team={team}
                         tasks={tasks}
+                        user={user}
                         defaultParentId={subtaskParent?.Id}
                         lockParent
                         title={`Подзадача для: ${subtaskParent?.Name || ''}`}
@@ -564,6 +569,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                         projectId={project.id}
                         team={team}
                         tasks={tasks}
+                        user={user}
                         existingTask={editTask}
                         onUpdated={async (updated) => {
                             await loadProjectDetails();
@@ -617,7 +623,8 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                                     if (!window.confirm(confirmMessage)) return;
 
                                     try {
-                                        await deleteTask(taskId);
+                                        const meExecutor = team?.Executors?.find(ex => ex.StudentId === user?.id);
+                                        await deleteTask(taskId, meExecutor?.Id);
                                         await loadProjectDetails();
                                         setError('');
                                     } catch (err) {

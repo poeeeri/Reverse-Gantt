@@ -24,8 +24,8 @@ export const updateTeam = async (teamId, teamData) => {
     });
 };
 
-export const deleteTeam = async (teamId) => {
-    return await apiFetch(`/teams/${teamId}`, {
+export const deleteTeam = async (teamId, actorExecutorId) => {
+    return await apiFetch(`/teams/${teamId}?actorExecutorId=${actorExecutorId}`, {
         method: 'DELETE'
     });
 };

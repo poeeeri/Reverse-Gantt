@@ -55,10 +55,16 @@ namespace gantt_server.Services
             return await GetByIdAsync(id, ct);
         }
 
-        public async Task<bool> DeleteAsync(Guid id, CancellationToken ct)
+        public async Task<bool> DeleteAsync(Guid id, Guid actorExecutorId, CancellationToken ct)
         {
-            var entity = await _db.Teams.FirstOrDefaultAsync(t => t.Id == id, ct);
+            var entity = await _db.Teams
+                .Include(t => t.Executors)
+                .FirstOrDefaultAsync(t => t.Id == id, ct);
             if (entity is null) 
+                return false;
+
+            var actor = entity.Executors.FirstOrDefault(e => e.Id == actorExecutorId);
+            if (actor is null || actor.Role != ExecutorRole.Leader)
                 return false;
 
             _db.Teams.Remove(entity);
@@ -94,11 +100,23 @@ namespace gantt_server.Services
             return executor.ToTeamExecutorDto();
         }
 
-        public async Task<bool> RemoveExecutorAsync(Guid teamId, Guid executorId, CancellationToken ct)
+        public async Task<bool> RemoveExecutorAsync(Guid teamId, Guid executorId, Guid actorExecutorId, CancellationToken ct)
         {
-            var executor = await _db.Executors.FirstOrDefaultAsync(e => e.Id == executorId && e.TeamId == teamId, ct);
+            var team = await _db.Teams
+                .Include(t => t.Executors)
+                .FirstOrDefaultAsync(t => t.Id == teamId, ct);
+            if (team is null) return false;
+
+            var actor = team.Executors.FirstOrDefault(e => e.Id == actorExecutorId);
+            if (actor is null || actor.Role != ExecutorRole.Leader)
+                return false;
+
+            var executor = team.Executors.FirstOrDefault(e => e.Id == executorId);
             if (executor is null) 
                 return false;
+
+            if (executor.Role == ExecutorRole.Leader)
+                return false; // лидер может выйти только удалением команды
 
             _db.Executors.Remove(executor);
             await _db.SaveChangesAsync(ct);

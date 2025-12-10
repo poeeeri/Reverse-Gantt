@@ -43,9 +43,10 @@ namespace gantt_server.Controllers
         }
 
         [HttpDelete("{id:guid}")]
-        public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+        public async Task<IActionResult> Delete(Guid id, [FromQuery] Guid actorExecutorId, CancellationToken ct)
         {
-            var ok = await _teamService.DeleteAsync(id, ct);
+            if (actorExecutorId == Guid.Empty) return BadRequest(new { error = "actorExecutorId required" });
+            var ok = await _teamService.DeleteAsync(id, actorExecutorId, ct);
             return ok ? NoContent() : NotFound();
         }
 
@@ -64,9 +65,10 @@ namespace gantt_server.Controllers
         }
 
         [HttpDelete("{teamId:guid}/executors/{executorId:guid}")]
-        public async Task<IActionResult> RemoveExecutor(Guid teamId, Guid executorId, CancellationToken ct)
+        public async Task<IActionResult> RemoveExecutor(Guid teamId, Guid executorId, [FromQuery] Guid actorExecutorId, CancellationToken ct)
         {
-            var ok = await _teamService.RemoveExecutorAsync(teamId, executorId, ct);
+            if (actorExecutorId == Guid.Empty) return BadRequest(new { error = "actorExecutorId required" });
+            var ok = await _teamService.RemoveExecutorAsync(teamId, executorId, actorExecutorId, ct);
             return ok ? NoContent() : NotFound();
         }
     }

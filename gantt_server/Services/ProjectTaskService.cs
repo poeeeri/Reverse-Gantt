@@ -47,6 +47,10 @@ namespace gantt_server.Services
             if (dto.ParentTaskId.HasValue)
                 await EnsureSameProjectTask(dto.ProjectId, dto.ParentTaskId.Value, ct);
 
+            var actor = await _db.Executors.AsNoTracking().FirstOrDefaultAsync(e => e.Id == dto.ActorExecutorId, ct);
+            if (actor is null || actor.TeamId != dto.TeamId || actor.Role != ExecutorRole.Leader)
+                throw new InvalidOperationException("Создавать задачи может только лидер команды");
+
             var entity = dto.ToEntity();
 
             await LoadAndAttachDependencies(entity, dto.DependencyIds, ct);
@@ -96,11 +100,16 @@ namespace gantt_server.Services
             return updated.ToDto();
         }
 
-        public async Task<bool> DeleteAsync(Guid id, CancellationToken ct)
+        public async Task<bool> DeleteAsync(Guid id, Guid actorExecutorId, CancellationToken ct)
         {
-            var task = await _db.ProjectTasks.FirstOrDefaultAsync(t => t.Id == id, ct);
-            if (task is null)
-                return false;
+            var task = await _db.ProjectTasks
+                .Include(t => t.Project)
+                .FirstOrDefaultAsync(t => t.Id == id, ct);
+            if (task is null) return false;
+
+            var actor = await _db.Executors.AsNoTracking().FirstOrDefaultAsync(e => e.Id == actorExecutorId, ct);
+            if (actor is null || actor.TeamId != task.TeamId || actor.Role != ExecutorRole.Leader)
+                throw new InvalidOperationException("Удалять задачи может только лидер команды");
 
             _db.ProjectTasks.Remove(task);
             await _db.SaveChangesAsync(ct);

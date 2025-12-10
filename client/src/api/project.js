@@ -24,8 +24,8 @@ export const updateProject = async (projectId, projectData) => {
     });
 };
 
-export const deleteProject = async (projectId) => {
-    return await apiFetch(`/projects/${projectId}`, {
+export const deleteProject = async (projectId, actorExecutorId) => {
+    return await apiFetch(`/projects/${projectId}?actorExecutorId=${actorExecutorId}`, {
         method: 'DELETE'
     });
 };
