@@ -1,6 +1,6 @@
 .tasks-wrapper {
     background-color: #ffe9ef;
-    border-left: 1px solid #f5c5d3;
+    border-left: 1px solid #ffc9d7;
     padding: 1.5rem 2rem;
     min-height: 100%;
     box-sizing: border-box;
@@ -22,7 +22,7 @@
 .tasks-title {
     font-size: 1.6rem;
     margin: 0;
-    color: #c23a5f;
+    color: #cc1d49;
     font-weight: 700;
 }
 
@@ -61,16 +61,16 @@
 .filter-select {
     padding: 0.35rem 0.75rem;
     border-radius: 10px;
-    border: 1px solid #e6b7c5;
-    background-color: #fff5f8;
+    border: 1px solid #ffc9d7;
+    background-color: #fff0f5;
     color: #a3163a;
     font-size: 0.95rem;
     outline: none;
 }
 
 .filter-select:focus {
-    border-color: #c23a5f;
-    box-shadow: 0 0 0 2px rgba(194, 58, 95, 0.16);
+    border-color: #cc1d49;
+    box-shadow: 0 0 0 2px rgba(204, 29, 73, 0.16);
 }
 
 .tasks-list {
@@ -80,9 +80,9 @@
 }
 
 .tasks-wrapper.error {
-    color: #842029;
-    background-color: #f8d7da;
-    border: 1px solid #f5c2c7;
+    color: #a3163a;
+    background-color: #ffdfe8;
+    border: 1px solid #ffc9d7;
     border-radius: 12px;
     padding: 1rem 1.5rem;
 }
@@ -91,7 +91,7 @@
     padding: 0.9rem 1.2rem;
     border-radius: 12px;
     background-color: #ffe9ef;
-    border: 1px dashed #e6b7c5;
+    border: 1px dashed #ffc9d7;
     color: #a3163a;
     text-align: center;
     font-size: 0.95rem;
@@ -124,7 +124,6 @@
     transition: 0.25s ease;
 }
 
-
 .task-node.level-0 {
     margin-left: 0;
 }
@@ -139,7 +138,7 @@
     left: 0.35rem;
     top: 0;
     bottom: 0.6rem;
-    border-left: 1px dashed #e6b7c5;
+    border-left: 1px dashed #ffc9d7;
 }
 
 .task-children {
@@ -161,18 +160,18 @@
 .progress-status {
     padding: 0.2rem 0.6rem;
     border-radius: 999px;
-    background-color: #ffe3ea;
+    background-color: #ffdfe8;
     color: #a3163a;
     font-size: 0.8rem;
     font-weight: 500;
-    border: 1px solid #f1c2d0;
+    border: 1px solid #ffc9d7;
 }
 
 .task-details {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: 0.45rem;
 }
 
 .task-header-row {
@@ -209,7 +208,7 @@
 }
 
 .task-toggle:hover {
-    background-color: #f7d5e0;
+    background-color: #ffdfe8;
     transform: translateY(-1px);
 }
 
@@ -218,14 +217,14 @@
     border-radius: 999px;
     font-size: 0.78rem;
     font-weight: 500;
-    border: 1px solid #e6b7c5;
+    border: 1px solid #ffc9d7;
     background-color: #ffe9ef;
     color: #a3163a;
     white-space: nowrap;
 }
 
 .role-chip.leader {
-    border-color: #c23a5f;
+    border-color: #cc1d49;
 }
 
 .role-chip.member {
@@ -252,19 +251,17 @@
 }
 
 .task-footer {
-    margin-top: 0.25rem;
+    margin-top: 0.4rem;
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-    font-size: 0.82rem;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.8rem;
     color: #a3163a;
 }
 
 .deadline {
-    padding: 0.18rem 0.55rem;
-    border-radius: 999px;
-    background-color: #ffe3ea;
-    border: 1px solid #f1c2d0;
+    font-weight: 600;
+    color: #cc1d49;
 }
 
 .duration {
@@ -281,7 +278,7 @@
 
 .deps-label {
     font-weight: 600;
-    color: #5a414a;
+    color: #a3163a;
 }
 
 .deps-list {
@@ -293,8 +290,8 @@
 .dep-chip {
     padding: 0.12rem 0.45rem;
     border-radius: 999px;
-    background-color: #f1c2d0;
-    color: #fff;
+    background-color: #cc1d49;
+    color: white;
     font-size: 0.76rem;
 }
 
@@ -320,34 +317,61 @@
     }
 }
 
+.filter-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    padding-right: 2.2rem;
+    cursor: pointer;
+
+    background-image:
+        linear-gradient(45deg, transparent 50%, #cc1d49 50%),
+        linear-gradient(135deg, #cc1d49 50%, transparent 50%);
+    background-position:
+        calc(100% - 16px) 50%,
+        calc(100% - 10px) 50%;
+    background-size:
+        6px 6px,
+        6px 6px;
+    background-repeat: no-repeat;
+}
+
+.filter-select:hover {
+    background-color: #ffe9ef;
+}
+
+.filter-select option {
+    background-color: #fff0f5;
+    color: #a3163a;
+}
+
 
 /* комменты */
 .comments-toggle {
-    background: none;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    padding: 4px 8px;
-    font-size: 12px;
+    background: transparent;
+    border: none;
+    padding: 2px 6px;
+    font-size: 14px;
     cursor: pointer;
-    transition: all 0.2s;
-    color: #666;
+    color: #cc1d49;
     display: inline-flex;
     align-items: center;
     gap: 4px;
     margin-left: auto;
+    opacity: 0.85;
 }
 
 .comments-toggle:hover {
-    background-color: #f5f5f5;
-    border-color: #4a90e2;
-    color: #4a90e2;
+    opacity: 1;
+    text-decoration: underline;
 }
 
 .task-comments-section {
     margin-top: 16px;
     margin-left: 16px;
     padding: 16px;
-    background-color: #f9f9f9;
+    background-color: #ffe9ef;
     border-radius: 8px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid #ffc9d7;
 }

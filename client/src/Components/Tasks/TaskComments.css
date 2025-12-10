@@ -1,0 +1,176 @@
+.comments-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(204, 29, 73, 0.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.comments-modal {
+    background: #ffe9ef;
+    width: 640px;
+    max-width: calc(100vw - 32px);
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(204, 29, 73, 0.25);
+    position: relative;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.comments-modal h3 {
+    margin: 0;
+    padding: 16px 20px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #cc1d49;
+    border-bottom: 1px solid #ffc9d7;
+}
+
+.close-btn {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    border: none;
+    background: none;
+    font-size: 26px;
+    cursor: pointer;
+    color: #cc1d49;
+    line-height: 1;
+}
+
+.close-btn:hover {
+    color: #a3163a;
+}
+
+.comments-list {
+    padding: 16px 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.comment-item {
+    position: relative;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #ffdfe8;
+    margin-bottom: 12px;
+}
+
+.comment-author {
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    color: #cc1d49;
+}
+
+.comment-content {
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: #a3163a;
+    white-space: pre-wrap;
+}
+
+.comment-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.comment-item:hover .comment-actions {
+    opacity: 1;
+}
+
+.comment-actions button {
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 14px;
+    color: #cc1d49;
+    border-radius: 6px;
+}
+
+.comment-actions button:hover {
+    background: #ffe9ef;
+    color: #a3163a;
+}
+
+.comment-edit textarea {
+    width: 100%;
+    min-height: 70px;
+    resize: vertical;
+    border-radius: 8px;
+    border: 1px solid #ffc9d7;
+    padding: 8px;
+    font-size: 0.9rem;
+    background: #fff0f5;
+    color: #a3163a;
+}
+
+.comment-edit textarea:focus {
+    outline: none;
+    border-color: #cc1d49;
+}
+
+.comment-edit button {
+    margin-top: 6px;
+    margin-right: 6px;
+    background: #cc1d49;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.comment-edit button:hover {
+    background: #a3163a;
+}
+
+.comment-add {
+    padding: 14px 20px;
+    border-top: 1px solid #ffc9d7;
+    background: #ffe9ef;
+}
+
+.comment-add textarea {
+    width: 100%;
+    min-height: 80px;
+    resize: vertical;
+    border-radius: 10px;
+    border: 1px solid #ffc9d7;
+    padding: 10px;
+    font-size: 0.9rem;
+    background: #fff0f5;
+    color: #a3163a;
+}
+
+.comment-add textarea:focus {
+    outline: none;
+    border-color: #cc1d49;
+}
+
+.comment-add button {
+    margin-top: 8px;
+    background: #cc1d49;
+    border: none;
+    color: white;
+    padding: 8px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.comment-add button:hover {
+    background: #a3163a;
+}
