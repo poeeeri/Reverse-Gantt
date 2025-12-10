@@ -8,6 +8,6 @@ namespace gantt_server.Services.Interfaces
         Task<ProjectReadDto?> GetByIdAsync(Guid id, CancellationToken ct);
         Task<ProjectReadDto> CreateAsync(ProjectCreateDto dto, CancellationToken ct);
         Task<ProjectReadDto?> UpdateAsync(Guid id, ProjectUpdateDto dto, CancellationToken ct);
-        Task<bool> DeleteAsync(Guid id, CancellationToken ct);
+        Task<bool> DeleteAsync(Guid id, Guid actorExecutorId, CancellationToken ct);
     }
 }

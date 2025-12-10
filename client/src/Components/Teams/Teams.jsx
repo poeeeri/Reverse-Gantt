@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getMyTeams } from '../../api/team';
+import { getMyTeams, deleteTeam } from '../../api/team';
+import { deleteProject } from '../../api/project';
 import CreateTeamModal from '../CreateTeam/CreateTeam';
 import CreateProjectModal from '../Projects/CreateProjectModal';
 import { useNavigate } from 'react-router-dom';
@@ -63,6 +64,32 @@ const Teams = ({ user }) => {
                 openProjectDetails: true
             }
         });
+    };
+
+    const handleDeleteTeam = async (team) => {
+        if (!isUserLeader(team)) return;
+        const meExecutor = team.executors.find(e => e.StudentId === user.id);
+        if (!meExecutor) return;
+        if (!confirm(`Удалить команду "${team.name}"? Это действие необратимо.`)) return;
+        try {
+            await deleteTeam(team.id, meExecutor.Id);
+            await loadTeams();
+        } catch (err) {
+            alert(err.message || 'Не удалось удалить команду');
+        }
+    };
+
+    const handleDeleteProject = async (team, project) => {
+        if (!isUserLeader(team)) return;
+        const meExecutor = team.executors.find(e => e.StudentId === user.id);
+        if (!meExecutor) return;
+        if (!confirm(`Удалить проект "${project.Name}"?`)) return;
+        try {
+            await deleteProject(project.Id, meExecutor.Id);
+            await loadTeams();
+        } catch (err) {
+            alert(err.message || 'Не удалось удалить проект');
+        }
     };
 
     const handleMemberClick = (team, member) => {
@@ -173,6 +200,15 @@ const Teams = ({ user }) => {
                                 {team.description && (
                                     <p className="team-description">{team.description}</p>
                                 )}
+
+                                {isUserLeader(team) && (
+                                    <button
+                                        className="delete-team-btn"
+                                        onClick={() => handleDeleteTeam(team)}
+                                    >
+                                        Удалить команду
+                                    </button>
+                                )}
                             </div>
 
                             <div className="team-content">
@@ -229,24 +265,33 @@ const Teams = ({ user }) => {
                                     <div className="projects-list">
                                         {team.projects.length > 0 ? (
                                             team.projects.map(project => (
-                                                <div
-                                                    key={project.Id}
-                                                    className="project-item"
-                                                    onClick={() => handleProjectClick(project)}
-                                                >
-                                                    <div className="project-info">
-                                                        <h4 className="project-name">{project.Name || 'Без названия'}</h4>
-                                                        <p className="project-description">
-                                                            {project.Description || 'Описание отсутствует'}
-                                                        </p>
-                                                        <div className="project-meta">
-                                                            <span className="project-subject">{project.Subject || 'Без темы'}</span>
-                                                            <span className="project-deadline">
-                                                                До: {formatDate(project.FinalDeadline)}
-                                                            </span>
-                                                        </div>
+                                            <div
+                                                key={project.Id}
+                                                className="project-item"
+                                            >
+                                                <div className="project-info">
+                                                    <h4 className="project-name" onClick={() => handleProjectClick(project)}>{project.Name || 'Без названия'}</h4>
+                                                    <p className="project-description">
+                                                        {project.Description || 'Описание отсутствует'}
+                                                    </p>
+                                                    <div className="project-meta">
+                                                        <span className="project-subject">{project.Subject || 'Без темы'}</span>
+                                                        <span className="project-deadline">
+                                                            До: {formatDate(project.FinalDeadline)}
+                                                        </span>
                                                     </div>
+                                                    {isUserLeader(team) && (
+                                                        <div className="project-actions">
+                                                            <button
+                                                                className="delete-project-btn"
+                                                                onClick={() => handleDeleteProject(team, project)}
+                                                            >
+                                                                Удалить проект
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
+                                            </div>
                                             ))
                                         ) : (
                                             <p className="no-projects">Нет активных проектов</p>
@@ -276,6 +321,7 @@ const Teams = ({ user }) => {
             <TeamMemberModal
                 team={selectedTeam}
                 member={selectedMember}
+                currentExecutorId={selectedTeam?.executors?.find(e => e.StudentId === user?.id)?.Id}
                 isOpen={memberModalOpen}
                 onClose={() => {
                     setMemberModalOpen(false);

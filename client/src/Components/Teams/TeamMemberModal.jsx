@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { apiFetch } from '../../api/http';
 import './TeamMemberModal.css';
 
-const TeamMemberModal = ({ team, member, isOpen, onClose, onMemberUpdated, isLeader }) => {
+const TeamMemberModal = ({ team, member, isOpen, onClose, onMemberUpdated, isLeader, currentExecutorId }) => {
     const [newRole, setNewRole] = useState(member?.Role || 0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -40,7 +40,10 @@ const TeamMemberModal = ({ team, member, isOpen, onClose, onMemberUpdated, isLea
             setLoading(true);
             setError('');
 
-            await apiFetch(`/teams/${team.Id}/executors/${member.Id}`, {
+            const teamId = team?.Id || team?.id;
+            if (!teamId || !currentExecutorId) throw new Error('Нет прав для удаления');
+
+            await apiFetch(`/teams/${teamId}/executors/${member.Id}?actorExecutorId=${currentExecutorId}`, {
                 method: 'DELETE'
             });
 

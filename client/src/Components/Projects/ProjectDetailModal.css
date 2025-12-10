@@ -236,23 +236,62 @@
     margin-top: 10px;
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .task-subtask-btn {
     background: #ffe9ef;
     color: #cc1d49;
     border: 1px solid #ffc9d7;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 0.85rem;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
+    box-shadow: 0 3px 10px rgba(204, 29, 73, 0.12);
 }
 
 .task-subtask-btn:hover {
     background: #ffc9d7;
     border-color: #cc1d49;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(204, 29, 73, 0.2);
+}
+
+.task-edit-btn,
+.delete-project-btn,
+.delete-team-btn {
+    background: #cc1d49;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s ease, box-shadow 0.2s ease;
+    box-shadow: 0 3px 10px rgba(204, 29, 73, 0.15);
+}
+
+.task-edit-btn:hover,
+.delete-project-btn:hover,
+.delete-team-btn:hover {
+    background: #a3163a;
+    box-shadow: 0 4px 12px rgba(204, 29, 73, 0.22);
+}
+
+.delete-project-btn,
+.delete-team-btn {
+    margin-top: 10px;
+    background: #cc1d49;
+    box-shadow: 0 3px 10px rgba(255, 107, 107, 0.2);
+}
+
+.delete-project-btn:hover,
+.delete-team-btn:hover {
+    background: #a3163a;
+    box-shadow: 0 4px 14px rgba(255, 107, 107, 0.3);
 }
 
 .task-name {
