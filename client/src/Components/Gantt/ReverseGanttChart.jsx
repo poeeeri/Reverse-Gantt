@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import GanttGrid from './GanttGrid';
-import GanttTaskBar from './GanttTaskBar';
+//import GanttTaskBar from './GanttTaskBar';
 import {
     calculateReverseDates,
     calculateCriticalPath,
@@ -24,8 +24,8 @@ export default function ReverseGanttChart({ tasks, projectDeadline, onEditTask, 
         if (isNaN(deadlineDate.getTime())) {
             return <div className="gantt-container"><p>Неверный формат дедлайна</p></div>;
         }
-      } catch (e) {
-          return <div className="gantt-container"><p>Ошибка обработки дедлайна</p></div>;
+    } catch (e) {
+        return <div className="gantt-container"><p>Ошибка обработки дедлайна</p></div>;
     }
 
     const taskDates = useMemo(
@@ -35,29 +35,29 @@ export default function ReverseGanttChart({ tasks, projectDeadline, onEditTask, 
 
     const criticalPath = useMemo(
         () => {
-          try {
-              return calculateCriticalPath(tasks);
-          } catch (e) {
-              console.error('Error calculating critical path:', e);
-              return [];
-          }
+            try {
+                return calculateCriticalPath(tasks);
+            } catch (e) {
+                console.error('Error calculating critical path:', e);
+                return [];
+            }
         },
         [tasks]
     );
 
-  const projectStart = useMemo(() => {
-    try {
-        const dates = Object.values(taskDates).filter(d => d && d.start);
-        if (dates.length === 0) {
+    const projectStart = useMemo(() => {
+        try {
+            const dates = Object.values(taskDates).filter(d => d && d.start);
+            if (dates.length === 0) {
+                return new Date(projectDeadline);
+            }
+            const minTime = Math.min(...dates.map(d => d.start.getTime()));
+            return new Date(minTime);
+        } catch (e) {
+            console.error('Error calculating project start:', e);
             return new Date(projectDeadline);
         }
-        const minTime = Math.min(...dates.map(d => d.start.getTime()));
-        return new Date(minTime);
-    } catch (e) {
-        console.error('Error calculating project start:', e);
-        return new Date(projectDeadline);
-    }
-  }, [taskDates, projectDeadline]);
+    }, [taskDates, projectDeadline]);
 
     const PAD_DAYS_BEFORE = 3;
     const PAD_DAYS_AFTER = 3;
@@ -73,32 +73,32 @@ export default function ReverseGanttChart({ tasks, projectDeadline, onEditTask, 
         }
     }, [paddedStart, paddedEnd]);
 
-  return (
-      <div className="gantt-container" style={{ width }}>
-          <GanttGrid
-              projectStart={paddedStart}
-              projectEnd={paddedEnd}
-          />
+    return (
+        <div className="gantt-container" style={{ width }}>
+            <GanttGrid
+                projectStart={paddedStart}
+                projectEnd={paddedEnd}
+            />
 
-        <div className="gantt-tasks">
-            {tasks.map((task, i) => {
-              if (!task || !task.id) return null;
-              return (
-                  <GanttTaskBar
-                      key={task.id}
-                      task={task}
-                      index={i}
-                      projectStart={paddedStart}
-                      taskDates={taskDates}
-                      isCritical={criticalPath.includes(task.id)}
-                      onEditTask={onEditTask}
-                      onDeleteTask={onDeleteTask}
-                      hasActions={hasActions}
-                  />
-                );
-            })}
+            <div className="gantt-tasks">
+                {tasks.map((task, i) => {
+                    if (!task || !task.id) return null;
+                    return (
+                        <GanttTaskBar
+                            key={task.id}
+                            task={task}
+                            index={i}
+                            projectStart={paddedStart}
+                            taskDates={taskDates}
+                            isCritical={criticalPath.includes(task.id)}
+                            onEditTask={onEditTask}
+                            onDeleteTask={onDeleteTask}
+                            hasActions={hasActions}
+                        />
+                    );
+                })}
+            </div>
         </div>
-      </div>
     );
 }
 

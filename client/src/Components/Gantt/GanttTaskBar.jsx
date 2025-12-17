@@ -1,6 +1,5 @@
 // import React, { useState } from 'react';
 // import { diffDays, DAY_WIDTH } from './ganttUtils';
-
 // export default function GanttTaskBar({
 //     task,
 //     index,
@@ -26,4 +25,3 @@
 //         </div>
 //     );
 // }
-
