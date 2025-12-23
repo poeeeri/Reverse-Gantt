@@ -28,7 +28,7 @@ const Dashboard = () => {
                 </p>
             </div>
 
-            <div className="dashboard-content">
+            {/* <div className="dashboard-content">
                 <div className="projects-section">
                     <h2>Статистика проектов</h2>
                     <div className="project-list">
@@ -51,7 +51,7 @@ const Dashboard = () => {
                         Здесь будет календарь
                     </div>
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 };

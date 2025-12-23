@@ -23,7 +23,7 @@
   align-items: center;
   justify-content: center;
   font-size: 11px;
-  color: #333;
+  color: #cc1d49; /* pink date labels */
   background: #fff;
 }
 
@@ -156,4 +156,64 @@
 
 rect._31ERP {
     fill: #e37691;
+}
+
+.gantt-modal .detail-modal-header h2,
+.detail-modal.gantt-modal .detail-modal-header h2 {
+  color: #cc1d49;
+}
+
+.gantt-container svg ._9w8d5,
+.gantt-container svg ._2q1Kt,
+.gantt-container svg ._3KcaM,
+.gantt-container svg ._3zRJQ {
+  fill: #cc1d49 !important;
+}
+
+.gantt-container ._2QjE6,
+.gantt-container ._2TfEi {
+  color: #cc1d49 !important;
+}
+
+.gantt-container ._3lLk3,
+.gantt-container ._3ZbQT,
+.gantt-container ._29NTg,
+.gantt-container ._3KcaM,
+.gantt-container ._3w_5u,
+.gantt-container ._3lLk3 ._3KcaM,
+.gantt-container ._3ZbQT ._3KcaM {
+  color: #cc1d49 !important;
+  fill: #cc1d49 !important;
+}
+
+.gantt-container ._3lLk3 span,
+.gantt-container ._3lLk3 div {
+  color: #cc1d49 !important;
+}
+
+.gantt-container ._3ZbQT ._34SS0 ._3lLk3,
+.gantt-container ._3ZbQT ._34SS0 ._3lLk3 *,
+.gantt-container ._3ZbQT ._3lLk3,
+.gantt-container ._3ZbQT ._3lLk3 *,
+.gantt-container th,
+.gantt-container td {
+  color: #cc1d49 !important;
+  fill: #cc1d49 !important;
+}
+
+.gantt-container ._29NTg,
+.gantt-container ._29NTg * {
+  color: #cc1d49 !important;
+}
+
+.gantt-container ._3ZbQT,
+.gantt-container ._3ZbQT * {
+  color: #cc1d49 !important;
+  fill: #cc1d49 !important;
+}
+
+.gantt-container ._WuQ0f,
+.gantt-container ._WuQ0f * {
+  color: #cc1d49 !important;
+  fill: #cc1d49 !important;
 }

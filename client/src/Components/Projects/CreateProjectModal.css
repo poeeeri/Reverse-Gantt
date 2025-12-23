@@ -1,10 +1,7 @@
 .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(204, 29, 73, 0.1);
+    inset: 0;
+    background: rgba(204, 29, 73, 0.18);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -15,36 +12,38 @@
 .modal-window {
     background: #ffe9ef;
     border: 1px solid #ffc9d7;
-    border-radius: 12px;
-    padding: 30px;
+    border-radius: 14px;
+    padding: 28px 30px;
     width: 100%;
     max-width: 500px;
     position: relative;
-    box-shadow: 0 10px 30px rgba(204, 29, 73, 0.2);
+    box-shadow: 0 14px 40px rgba(204, 29, 73, 0.25);
+    animation: modalIn 0.25s ease-out;
 }
 
 .modal-close {
     position: absolute;
-    top: 15px;
-    right: 15px;
+    top: 14px;
+    right: 14px;
     background: none;
     border: none;
     color: #cc1d49;
     cursor: pointer;
-    padding: 5px;
-    border-radius: 4px;
+    padding: 6px;
+    border-radius: 6px;
     transition: background-color 0.2s;
 }
 
 .modal-close:hover {
-    background: #ffc9d7;
+    background: #ffdfe8;
 }
 
 .modal-window h2 {
     color: #cc1d49;
-    margin: 0 0 20px 0;
-    font-size: 1.5rem;
+    margin: 0 0 22px;
+    font-size: 1.45rem;
     text-align: center;
+    font-weight: 700;
 }
 
 .form {
@@ -55,30 +54,39 @@
 
 .form input,
 .form textarea {
-    padding: 12px 15px;
+    padding: 12px 14px;
     border: 1px solid #ffc9d7;
-    border-radius: 8px;
-    background: white;
-    color: #cc1d49;
-    font-size: 1rem;
-    transition: border-color 0.2s;
+    border-radius: 10px;
+    background: #fff0f5;
+    color: #a3163a;
+    font-size: 0.95rem;
+    transition: all 0.25s ease;
+
+    box-shadow:
+        inset 0 1px 2px rgba(204, 29, 73, 0.08);
 }
 
 .form input:focus,
 .form textarea:focus {
     outline: none;
     border-color: #cc1d49;
+    background: #ffe9ef;
+
+    box-shadow:
+        0 0 0 2px rgba(204, 29, 73, 0.15),
+        inset 0 1px 2px rgba(204, 29, 73, 0.1);
 }
 
 .form input::placeholder,
 .form textarea::placeholder {
     color: #a3163a;
-    opacity: 0.7;
+    opacity: 0.65;
 }
 
 .form input:disabled,
 .form textarea:disabled {
-    opacity: 0.6;
+    background: #ffe9ef;
+    opacity: 0.7;
     cursor: not-allowed;
 }
 
@@ -87,21 +95,24 @@
     color: white;
     border: none;
     padding: 12px 20px;
-    border-radius: 8px;
-    font-size: 1rem;
+    border-radius: 10px;
+    font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.2s;
     margin-top: 10px;
 }
 
 .submit-btn:hover:not(:disabled) {
     background: #a3163a;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(204, 29, 73, 0.3);
 }
 
 .submit-btn:disabled {
     background: #ffc9d7;
     cursor: not-allowed;
+    box-shadow: none;
 }
 
 @media (max-width: 768px) {
@@ -114,22 +125,22 @@
     }
 }
 
-
 .create-project-btn {
     background: #cc1d49;
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-size: 1rem;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.2s;
     white-space: nowrap;
 }
 
 .create-project-btn:hover {
     background: #a3163a;
+    transform: translateY(-1px);
 }
 
 .projects-header>div {
@@ -152,23 +163,29 @@
 }
 
 .team-select-btn {
-    background: white;
+    background: #fff0f5;
     color: #cc1d49;
     border: 1px solid #ffc9d7;
     padding: 10px 14px;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     font-weight: 600;
+    transition: all 0.2s;
+}
+
+.team-select-btn:hover {
+    background: #ffe9ef;
+    border-color: #cc1d49;
 }
 
 .team-dropdown {
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
-    background: white;
-    border: 1px solid #ffd7e3;
-    box-shadow: 0 10px 30px rgba(204,29,73,0.08);
-    border-radius: 8px;
+    background: #ffe9ef;
+    border: 1px solid #ffc9d7;
+    box-shadow: 0 12px 30px rgba(204, 29, 73, 0.15);
+    border-radius: 12px;
     z-index: 1100;
     min-width: 220px;
     max-height: 220px;
@@ -178,13 +195,34 @@
 .team-item {
     display: block;
     width: 100%;
-    padding: 10px 12px;
+    padding: 10px 14px;
     text-align: left;
     background: transparent;
     border: none;
     cursor: pointer;
+    font-size: 0.9rem;
+    color: #a3163a;
+    transition: background-color 0.15s;
 }
 
-.team-item:hover { background: #fff0f4; }
+.team-item:hover {
+    background: #ffdfe8;
+}
 
-.team-dropdown-empty { padding: 10px 12px; color: #a3163a; }
+.team-dropdown-empty {
+    padding: 10px 14px;
+    color: #a3163a;
+    font-size: 0.9rem;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
