@@ -3,7 +3,7 @@ using gantt_server.Models;
 
 namespace gantt_server.Dtos.ProjectTaskDtos
 {
-    public sealed class ProjectTaskCreateDto : IValidatableObject
+    public sealed class ProjectTaskCreateDto
     {
         [Required(ErrorMessage = "Название задачи обязательно")]
         public required string Name { get; set; }
@@ -15,8 +15,6 @@ namespace gantt_server.Dtos.ProjectTaskDtos
 
         public ProjectTaskStatus Status { get; set; } = ProjectTaskStatus.Created;
 
-        public DateTime? Deadline { get; set; }
-
         public Guid? ParentTaskId { get; set; }
 
         public Guid ProjectId { get; set; }
@@ -27,13 +25,5 @@ namespace gantt_server.Dtos.ProjectTaskDtos
         public IList<Guid>? DependencyIds { get; set; }
 
         public IList<Guid>? ExecutorIds { get; set; }
-
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            if (Deadline.HasValue && Deadline.Value.Kind == DateTimeKind.Unspecified)
-            {
-                yield return new ValidationResult("Нужно указать дедлайн", new[] { nameof(Deadline) });
-            }
-        }
     }
 }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using gantt_server.Data;
@@ -11,9 +12,11 @@ using gantt_server.Data;
 namespace gantt_server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251223150010_RemoveTaskDeadline")]
+    partial class RemoveTaskDeadline
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -70,9 +73,14 @@ namespace gantt_server.Migrations
                     b.Property<Guid>("TeamId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("TeamId1")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TeamId");
+
+                    b.HasIndex("TeamId1");
 
                     b.HasIndex("StudentId", "TeamId")
                         .IsUnique();
@@ -261,7 +269,7 @@ namespace gantt_server.Migrations
                     b.HasOne("gantt_server.Models.ProjectTask", null)
                         .WithMany()
                         .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -274,10 +282,14 @@ namespace gantt_server.Migrations
                         .IsRequired();
 
                     b.HasOne("gantt_server.Models.Team", "Team")
-                        .WithMany("Executors")
+                        .WithMany()
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("gantt_server.Models.Team", null)
+                        .WithMany("Executors")
+                        .HasForeignKey("TeamId1");
 
                     b.Navigation("Student");
 

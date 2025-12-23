@@ -14,7 +14,6 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [durationDays, setDurationDays] = useState(1);
-    const [deadline, setDeadline] = useState('');
     const [status, setStatus] = useState(0);
     const [parentTaskId, setParentTaskId] = useState(defaultParentId || '');
     const [dependencyIds, setDependencyIds] = useState([]);
@@ -23,21 +22,18 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    const currentTaskId = existingTask?.Id || existingTask?.id || null;
     const availableExecutors = useMemo(() => team?.Executors || [], [team]);
-
-    const getDeadlineLimit = () => {
-        const candidates = [];
-        if (parentTaskId) {
-            const parent = (tasks || []).find((t) => (t.Id || t.id) === parentTaskId);
-            if (parent?.Deadline) candidates.push(new Date(parent.Deadline));
-        }
-        (dependencyIds || []).forEach((depId) => {
-            const dep = (tasks || []).find((t) => (t.Id || t.id) === depId);
-            if (dep?.Deadline) candidates.push(new Date(dep.Deadline));
+    const dependencyCandidates = useMemo(() => {
+        return (tasks || []).filter((t) => {
+            const id = t.Id || t.id;
+            if (!id) return false;
+            if (currentTaskId && id === currentTaskId) return false;
+            const deps = t.DependencyIds || t.dependencyIds || [];
+            if (currentTaskId && deps.includes(currentTaskId)) return false;
+            return true;
         });
-        if (!candidates.length) return null;
-        return new Date(Math.min(...candidates.map((d) => d.getTime())));
-    };
+    }, [tasks, currentTaskId]);
 
     React.useEffect(() => {
         setParentTaskId(defaultParentId || '');
@@ -49,8 +45,6 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
             setDescription(existingTask.Description || existingTask.description || '');
             setDurationDays(existingTask.DurationDays || existingTask.durationDays || 1);
             setStatus(existingTask.Status ?? existingTask.status ?? 0);
-            const dl = existingTask.Deadline ? (typeof existingTask.Deadline === 'string' ? existingTask.Deadline.split('T')[0] : new Date(existingTask.Deadline).toISOString().split('T')[0]) : '';
-            setDeadline(dl);
             setParentTaskId(existingTask.ParentTaskId || existingTask.parentTaskId || defaultParentId || '');
             setDependencyIds(existingTask.DependencyIds ? [...existingTask.DependencyIds] : (existingTask.dependencyIds ? [...existingTask.dependencyIds] : []));
             setExecutorIds(existingTask.ExecutorIds ? [...existingTask.ExecutorIds] : (existingTask.Executors ? existingTask.Executors.map(e => e.Id) : []));
@@ -61,7 +55,6 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
         setName('');
         setDescription('');
         setDurationDays(1);
-        setDeadline('');
         setStatus(0);
         setParentTaskId(defaultParentId || '');
         setDependencyIds([]);
@@ -95,12 +88,6 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
             return;
         }
 
-        const limit = getDeadlineLimit();
-        if (deadline && limit && new Date(deadline) > limit) {
-            setError(`Дедлайн не может быть позже ${limit.toLocaleDateString('ru-RU')}`);
-            return;
-        }
-
         try {
             setLoading(true);
             const payload = {
@@ -108,7 +95,6 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
                 Description: description.trim() || null,
                 DurationDays: Number(durationDays) || 1,
                 Status: Number(status),
-                Deadline: deadline ? new Date(deadline).toISOString() : null,
                 ParentTaskId: parentTaskId || null,
                 TeamId: team?.Id,
                 DependencyIds: dependencyIds.length ? dependencyIds : null,
@@ -162,15 +148,6 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
                     </label>
 
                     <label className="task-creator__field">
-                        <span>Дедлайн</span>
-                        <input
-                            type="date"
-                            value={deadline}
-                            onChange={(e) => setDeadline(e.target.value)}
-                        />
-                    </label>
-
-                    <label className="task-creator__field">
                         <span>Статус</span>
                         <select value={status} onChange={(e) => setStatus(e.target.value)}>
                             {statusOptions.map((opt) => (
@@ -210,8 +187,8 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
                     <div className="task-creator__list">
                         <div className="task-creator__list-title">Зависимости</div>
                         <div className="task-creator__checkboxes">
-                            {(tasks || []).length === 0 && <span className="task-creator__empty">Пока нет задач</span>}
-                            {(tasks || []).map((t) => (
+                            {dependencyCandidates.length === 0 && <span className="task-creator__empty">Пока нет задач</span>}
+                            {dependencyCandidates.map((t) => (
                                 <label key={t.Id || t.id} className="task-creator__checkbox">
                                     <input
                                         type="checkbox"

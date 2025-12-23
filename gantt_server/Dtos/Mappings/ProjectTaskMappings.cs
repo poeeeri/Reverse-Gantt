@@ -14,7 +14,6 @@ namespace gantt_server.Mappings
             Description = task.Description,
             DurationDays = task.DurationDays,
             Status = task.Status,
-            Deadline = task.Deadline,
             ParentTaskId = task.ParentTaskId,
             SubtaskIds = task.Subtasks.Select(t => t.Id).ToArray(),
             DependencyIds = task.Dependencies.Select(t => t.Id).ToArray(),
@@ -36,7 +35,6 @@ namespace gantt_server.Mappings
             Description = dto.Description,
             DurationDays = dto.DurationDays,
             Status = dto.Status,
-            Deadline = dto.Deadline,
             ParentTaskId = dto.ParentTaskId,
             AssignedAt = DateTime.UtcNow
         };
@@ -54,9 +52,6 @@ namespace gantt_server.Mappings
 
             if (dto.Status.HasValue)
                 entity.Status = dto.Status.Value;
-
-            if (dto.Deadline.HasValue)
-                entity.Deadline = dto.Deadline;
 
             if (dto.ParentTaskId.HasValue)
                 entity.ParentTaskId = dto.ParentTaskId;
