@@ -57,15 +57,6 @@ const statusProgress = (status) => {
     }
 };
 
-const daysLeftText = (deadline) => {
-    if (!deadline) return 'Без дедлайна';
-    const now = new Date();
-    const diff = Math.ceil((new Date(deadline) - now) / (1000 * 60 * 60 * 24));
-    if (diff > 0) return `Осталось: ${diff} дн.`;
-    if (diff === 0) return 'Срок сегодня';
-    return `Просрочено на ${Math.abs(diff)} дн.`;
-};
-
 const buildTree = (tasks) => {
     const map = new Map();
     tasks.forEach((t) => map.set(t.id, { ...t, children: [] }));
@@ -126,7 +117,7 @@ const ProjectTasks = ({ user }) => {
             if (!leaderTeamIds.includes(team.id)) return;
             team.projects?.forEach(project => {
                 project.projectTasks?.forEach(task => {
-                    byTeam.push({ ...task, projectName: project.name, teamName: team.name, scope: 'leader' });
+                    byTeam.push({ ...task, projectName: project.name, projectFinalDeadline: project.finalDeadline, teamName: team.name, scope: 'leader' });
                 });
             });
         });
@@ -138,7 +129,7 @@ const ProjectTasks = ({ user }) => {
         return (assignedTasks || []).map(task => {
             const team = teamsById.get(task.teamId);
             const project = team?.projects?.find(p => p.id === task.projectId);
-            return { ...task, projectName: project?.name || 'Без названия', teamName: team?.name || 'Без команды', scope: 'member' };
+            return { ...task, projectName: project?.name || 'Без названия', projectFinalDeadline: project?.finalDeadline, teamName: team?.name || 'Без команды', scope: 'member' };
         });
     }, [assignedTasks, teamsData]);
 
@@ -178,8 +169,9 @@ const ProjectTasks = ({ user }) => {
 
     const maxDeadline = useMemo(() => {
         const deadlines = ownTasks
-            .filter(t => t.deadline)
-            .map(t => new Date(t.deadline));
+            .map(t => t.projectFinalDeadline)
+            .filter(Boolean)
+            .map(d => new Date(d));
 
         if (deadlines.length === 0) {
             const future = new Date();
@@ -243,7 +235,6 @@ const ProjectTasks = ({ user }) => {
                     </div>
 
                     <div className="task-footer">
-                        <span className="deadline">{daysLeftText(task.deadline)}</span>
                         <span className="duration">Длительность: {task.durationDays} дн.</span>
                         <button 
                             className="comments-toggle" 

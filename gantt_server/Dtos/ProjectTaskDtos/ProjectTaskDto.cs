@@ -11,7 +11,6 @@ namespace gantt_server.Dtos.ProjectTaskDtos
         public string? Description { get; init; }
         public int DurationDays { get; init; }
         public ProjectTaskStatus Status { get; init; }
-        public DateTime? Deadline { get; init; }
         public Guid? ParentTaskId { get; init; }
         public IReadOnlyList<Guid> SubtaskIds { get; init; } = Array.Empty<Guid>();
         public IReadOnlyList<Guid> DependencyIds { get; init; } = Array.Empty<Guid>();

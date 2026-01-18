@@ -11,7 +11,6 @@ namespace gantt_server.Models
         public string? Description { get; set; }
         public int DurationDays { get; set; } = 1;
         public ProjectTaskStatus Status { get; set; } = ProjectTaskStatus.Created;
-        public DateTime? Deadline { get; set; }
 
         public Guid? ParentTaskId { get; set; }
         public ProjectTask? ParentTask { get; set; }
