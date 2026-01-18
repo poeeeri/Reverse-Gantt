@@ -301,6 +301,42 @@
     color: #a3163a;
 }
 
+.task-status.status-created {
+    background-color: #f1f3f5;
+    color: #4f5b66;
+    border: 1px solid #dfe3e6;
+}
+
+.task-status.status-available {
+    background-color: #e6f4ff;
+    color: #0b4f8a;
+    border: 1px solid #bcd9f2;
+}
+
+.task-status.status-in-progress {
+    background-color: #fff4d6;
+    color: #8a5a00;
+    border: 1px solid #f0d29b;
+}
+
+.task-status.status-done {
+    background-color: #e2f6e9;
+    color: #1f6b3d;
+    border: 1px solid #bfe7cd;
+}
+
+.task-status.status-cancelled {
+    background-color: #ffe4e6;
+    color: #9b1c31;
+    border: 1px solid #f5b5c1;
+}
+
+.task-status.status-unknown {
+    background-color: #f7f1f5;
+    color: #7a4a5c;
+    border: 1px solid #e2c9d6;
+}
+
 .task-description {
     color: #a3163a;
     margin: 0;
