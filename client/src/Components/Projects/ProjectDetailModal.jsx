@@ -150,6 +150,17 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
         return statuses[status] || 'Создана';
     };
 
+    const getTaskStatusClass = (status) => {
+        const statuses = {
+            0: 'status-created',
+            1: 'status-available',
+            2: 'status-in-progress',
+            3: 'status-done',
+            4: 'status-cancelled'
+        };
+        return statuses[status] || 'status-unknown';
+    };
+
     const formatDate = (dateString) => {
         if (!dateString) return 'Не указано';
         try {
@@ -318,7 +329,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                                         <div className="task-header">
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
                                                 <span className="task-name">{task.Name}</span>
-                                                <span className="task-status">{getTaskStatusText(task.Status)}</span>
+                                                <span className={`task-status ${getTaskStatusClass(task.Status)}`}>{getTaskStatusText(task.Status)}</span>
                                             </div>
                                             <div style={{ position: 'relative' }}>
                                                 {isUserLeader() && (

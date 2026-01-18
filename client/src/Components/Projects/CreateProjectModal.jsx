@@ -8,7 +8,7 @@ const CreateProjectModal = ({
     onProjectCreated,
     teamId,
     teamName,
-    userTeams = [],
+    userTeams,
     user
 }) => {
     const [projectName, setProjectName] = useState('');
@@ -21,9 +21,10 @@ const CreateProjectModal = ({
     const [showTeamsList, setShowTeamsList] = useState(false);
 
     const availableTeams = React.useMemo(() => {
+        const safeTeams = Array.isArray(userTeams) ? userTeams : [];
         if (!user || !user.id) return [];
 
-        return userTeams.filter(team => {
+        return safeTeams.filter(team => {
             const userExecutor = team.Executors?.find(executor => {
                 return executor.StudentId === user.id;
             });

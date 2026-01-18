@@ -57,6 +57,18 @@ const statusProgress = (status) => {
     }
 };
 
+const statusClass = (status) => {
+    const normalized = normalizeStatus(status);
+    const map = {
+        Created: 'status-created',
+        Available: 'status-available',
+        InProgress: 'status-in-progress',
+        Done: 'status-done',
+        Cancelled: 'status-cancelled'
+    };
+    return map[normalized] || 'status-unknown';
+};
+
 const buildTree = (tasks) => {
     const map = new Map();
     tasks.forEach((t) => map.set(t.id, { ...t, children: [] }));
@@ -192,7 +204,7 @@ const ProjectTasks = ({ user }) => {
             <div key={task.id} className={`task-node level-${level}`}>
                 <div className="task-card">
                     <div className="task-progress">
-                        <div className="progress-status">{formatStatus(task.status)}</div>
+                        <div className={`progress-status ${statusClass(task.status)}`}>{formatStatus(task.status)}</div>
                     </div>
 
                     <div className="task-details">
