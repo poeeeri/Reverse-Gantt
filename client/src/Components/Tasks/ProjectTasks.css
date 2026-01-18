@@ -167,6 +167,42 @@
     border: 1px solid #ffc9d7;
 }
 
+.progress-status.status-created {
+    background-color: #f1f3f5;
+    color: #4f5b66;
+    border-color: #dfe3e6;
+}
+
+.progress-status.status-available {
+    background-color: #e6f4ff;
+    color: #0b4f8a;
+    border-color: #bcd9f2;
+}
+
+.progress-status.status-in-progress {
+    background-color: #fff4d6;
+    color: #8a5a00;
+    border-color: #f0d29b;
+}
+
+.progress-status.status-done {
+    background-color: #e2f6e9;
+    color: #1f6b3d;
+    border-color: #bfe7cd;
+}
+
+.progress-status.status-cancelled {
+    background-color: #ffe4e6;
+    color: #9b1c31;
+    border-color: #f5b5c1;
+}
+
+.progress-status.status-unknown {
+    background-color: #f7f1f5;
+    color: #7a4a5c;
+    border-color: #e2c9d6;
+}
+
 .task-details {
     flex: 1;
     display: flex;
