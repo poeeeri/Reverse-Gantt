@@ -10,24 +10,56 @@ namespace gantt_server.Services
     public sealed class ProjectService : IProjectService
     {
         private readonly AppDbContext _db;
-
-        public ProjectService(AppDbContext db) {_db = db;}
+	
+	private readonly ICacheService _cache;
+        
+	private readonly ILogger<ProjectService> _logger;
+        
+	public ProjectService(AppDbContext db, ICacheService cache, ILogger<ProjectService> logger) 
+	{
+		_db = db; _cache = cache; _logger = logger; 
+	}
 
         public async Task<IReadOnlyList<ProjectReadDto>> GetAllAsync(CancellationToken ct)
         {
-            var projects = await ProjectsWithTasks()
-                .AsNoTracking()
-                .ToListAsync(ct);
+            const string cacheKey = "projects:all";
+            var ttl = TimeSpan.FromMinutes(5)
 
-            return projects.Select(p => p.ToReadDto()).ToList();
+            return await _cache.GetOrSetAsync(
+                cacheKey,
+                ttl,
+                async () =>
+                {
+                    _logger.LogInformation("Cache MISS for {CacheKey}, loading from database", cacheKey);
+                    
+                    var projects = await ProjectsWithTasks()
+                        .AsNoTracking()
+                        .ToListAsync(ct);
+
+                    return projects.Select(p => p.ToReadDto()).ToList();
+                }
+            );
         }
 
         public async Task<ProjectReadDto?> GetByIdAsync(Guid id, CancellationToken ct)
         {
-            var project = await ProjectsWithTasks()
-                .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.Id == id, ct);
-            return project?.ToReadDto();
+            var cacheKey = $"project:{id}";
+            var ttl = TimeSpan.FromMinutes(10);
+
+            return await _cache.GetOrSetAsync(
+                cacheKey,
+                ttl,
+                async () =>
+                {
+                    _logger.LogInformation("Cache MISS for {CacheKey}, loading from database", cacheKey);
+                    
+                    var project = await ProjectsWithTasks()
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(p => p.Id == id, ct);
+                        
+                    return project?.ToReadDto();
+                }
+            );
         }
 
         public async Task<ProjectReadDto> CreateAsync(ProjectCreateDto dto, CancellationToken ct)
@@ -35,6 +67,9 @@ namespace gantt_server.Services
             var entity = dto.ToEntity();
             _db.Projects.Add(entity);
             await _db.SaveChangesAsync(ct);
+
+            await _cache.RemoveAsync("projects:all");
+            _logger.LogInformation("Cache invalidated: projects:all after creating project {ProjectId}", entity.Id);
 
             return (await ProjectsWithTasks()
                 .AsNoTracking()
@@ -49,6 +84,10 @@ namespace gantt_server.Services
 
             entity.Apply(dto);
             await _db.SaveChangesAsync(ct);
+
+            await _cache.RemoveAsync($"project:{id}");
+            await _cache.RemoveAsync("projects:all");
+            _logger.LogInformation("Cache invalidated for project:{ProjectId} and projects:all", id);
 
             return await GetByIdAsync(id, ct);
         }
@@ -68,6 +107,12 @@ namespace gantt_server.Services
 
             _db.Projects.Remove(entity);
             await _db.SaveChangesAsync(ct);
+
+            
+            await _cache.RemoveAsync($"project:{id}");
+            await _cache.RemoveAsync("projects:all");
+            _logger.LogInformation("Cache invalidated for project:{ProjectId} and projects:all after deletion", id);
+
             return true;
         }
 

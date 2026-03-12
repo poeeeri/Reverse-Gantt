@@ -17,12 +17,17 @@ public sealed class AuthService : IAuthService
     private readonly AppDbContext _db;
     private readonly IPasswordHasher<Student> _hasher;
     private readonly JwtOptions _jwt;
+    private readonly ILogger<AuthService> _logger;
 
-    public AuthService(AppDbContext db, IOptions<JwtOptions> jwt)
+    public AuthService(
+        AppDbContext db,
+        IOptions<JwtOptions> jwt,
+        ILogger<AuthService> logger)
     {
         _db = db;
         _hasher = new PasswordHasher<Student>();
         _jwt = jwt.Value;
+        _logger = logger;
     }
 
     public async Task<AuthResponseDto> RegisterAsync(AuthRegisterDto dto, CancellationToken ct)
@@ -38,7 +43,10 @@ public sealed class AuthService : IAuthService
         _db.Students.Add(student);
         await _db.SaveChangesAsync(ct);
 
+        _logger.LogInformation("Student registered: {Email}", student.Email);
+
         var token = CreateToken(student);
+
         return new AuthResponseDto
         {
             Token = token,
@@ -49,6 +57,7 @@ public sealed class AuthService : IAuthService
     public async Task<AuthResponseDto> LoginAsync(AuthLoginDto dto, CancellationToken ct)
     {
         var email = StudentMappings.NormalizeEmail(dto.Email);
+
         var student = await _db.Students.FirstOrDefaultAsync(s => s.Email == email, ct)
             ?? throw new InvalidOperationException("неправильно введены данные");
 
@@ -57,6 +66,7 @@ public sealed class AuthService : IAuthService
             throw new InvalidOperationException("неправильно введены данные");
 
         var token = CreateToken(student);
+
         return new AuthResponseDto
         {
             Token = token,
@@ -73,7 +83,7 @@ public sealed class AuthService : IAuthService
             new("name", $"{student.FirstName} {student.LastName}".Trim())
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key));
+        var key = new SymmetricSecurityKey(GetJwtKeyBytes(_jwt.Key));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
@@ -84,5 +94,17 @@ public sealed class AuthService : IAuthService
             signingCredentials: creds);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    private static byte[] GetJwtKeyBytes(string key)
+    {
+        try
+        {
+            return Convert.FromBase64String(key);
+        }
+        catch (FormatException)
+        {
+            return Encoding.UTF8.GetBytes(key);
+        }
     }
 }

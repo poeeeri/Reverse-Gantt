@@ -30,20 +30,28 @@ namespace gantt_server.Controllers
                         .SelectMany(v => v.Errors)
                         .Select(e => e.ErrorMessage)
                         .ToList();
-                    
+
                     return BadRequest(new { errors });
                 }
 
                 var resp = await _authService.RegisterAsync(dto, ct);
                 return Ok(resp);
             }
-            catch (InvalidOperationException ex) 
-            { 
-                return Conflict(new { error = ex.Message }); 
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { error = ex.Message });
             }
             catch (ValidationException ex)
             {
                 return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = ex.Message,
+                    details = ex.ToString()
+                });
             }
         }
 
