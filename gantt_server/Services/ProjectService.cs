@@ -23,7 +23,7 @@ namespace gantt_server.Services
         public async Task<IReadOnlyList<ProjectReadDto>> GetAllAsync(CancellationToken ct)
         {
             const string cacheKey = "projects:all";
-            var ttl = TimeSpan.FromMinutes(5)
+            var ttl = TimeSpan.FromMinutes(5);
 
             return await _cache.GetOrSetAsync(
                 cacheKey,
