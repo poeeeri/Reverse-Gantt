@@ -95,6 +95,7 @@ public sealed class AuthService : IAuthService
     public async Task<AuthResponseDto> LoginAsync(AuthLoginDto dto, CancellationToken ct)
     {
         var email = StudentMappings.NormalizeEmail(dto.Email);
+
         var student = await _db.Students.FirstOrDefaultAsync(s => s.Email == email, ct)
             ?? throw new InvalidOperationException("Неправильно введены данные");
 
@@ -106,6 +107,7 @@ public sealed class AuthService : IAuthService
             throw new InvalidOperationException("Сначала подтвердите почту");
 
         var token = CreateToken(student);
+
         return new AuthResponseDto
         {
             Token = token,
@@ -216,7 +218,7 @@ public sealed class AuthService : IAuthService
             new("name", $"{student.FirstName} {student.LastName}".Trim())
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key));
+        var key = new SymmetricSecurityKey(GetJwtKeyBytes(_jwt.Key));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(

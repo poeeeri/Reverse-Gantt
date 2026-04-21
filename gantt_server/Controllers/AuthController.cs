@@ -45,6 +45,14 @@ namespace gantt_server.Controllers
             {
                 return BadRequest(new { error = ex.Message });
             }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = ex.Message,
+                    details = ex.ToString()
+                });
+            }
         }
 
         [HttpPost("login")]
