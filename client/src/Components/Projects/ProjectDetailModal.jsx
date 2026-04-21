@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { apiFetch } from '../../api/http';
-import { updateTask, deleteTask } from '../../api/task';
+import { deleteTask } from '../../api/task';
 import TaskCreator from '../Tasks/TaskCreator';
 import ReverseGanttChart from '../Gantt/ReverseGanttChart';
 import GanttTaskReactWrapper from '../Gantt/GanttTaskReactWrapper';
@@ -15,13 +15,12 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
     const [error, setError] = useState('');
     const [taskModalOpen, setTaskModalOpen] = useState(false);
     const [editTask, setEditTask] = useState(null);
-    const [taskEditError, setTaskEditError] = useState('');
     const [subtaskParent, setSubtaskParent] = useState(null);
     const [selectedExecutors, setSelectedExecutors] = useState([]);
     const [ganttModalOpen, setGanttModalOpen] = useState(false);
     const [loadingDetails, setLoadingDetails] = useState(false);
     const [openTaskMenu, setOpenTaskMenu] = useState(null);
-    const [editDeadlineLimit, setEditDeadlineLimit] = useState(null);
+    const [highlightedTaskId, setHighlightedTaskId] = useState(null);
 
     useEffect(() => {
         if (project && isOpen) {
@@ -43,6 +42,15 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
             return () => { document.documentElement.lang = prev || ''; };
         }
     }, [ganttModalOpen]);
+
+    useEffect(() => {
+        if (!highlightedTaskId) {
+            return undefined;
+        }
+
+        const timeoutId = window.setTimeout(() => setHighlightedTaskId(null), 1800);
+        return () => window.clearTimeout(timeoutId);
+    }, [highlightedTaskId]);
 
     const loadProjectDetails = async () => {
         setLoadingDetails(true);
@@ -99,59 +107,8 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
     };
 
     const openEditTask = (task) => {
-        setEditTask({
-            ...task,
-            DeadlineDateOnly: task.Deadline ? task.Deadline.split('T')[0] : ''
-        });
-        setTaskEditError('');
+        setEditTask(task);
         setSelectedExecutors(task.Executors?.map((e) => e.Id) || []);
-
-        const parent = task.ParentTaskId ? tasks.find((t) => t.Id === task.ParentTaskId) : null;
-        const deps = task.DependencyIds || [];
-        const candidates = [];
-        if (parent?.Deadline) candidates.push(new Date(parent.Deadline));
-        deps.forEach((depId) => {
-            const dep = tasks.find((t) => t.Id === depId);
-            if (dep?.Deadline) candidates.push(new Date(dep.Deadline));
-        });
-        if (candidates.length) {
-            setEditDeadlineLimit(new Date(Math.min(...candidates.map((d) => d.getTime()))));
-        } else {
-            setEditDeadlineLimit(null);
-        }
-    };
-
-    const handleTaskUpdate = async (e) => {
-        e.preventDefault();
-        if (!editTask) return;
-        setTaskEditError('');
-
-        const limit = editDeadlineLimit;
-        if (editTask.DeadlineDateOnly && limit && new Date(editTask.DeadlineDateOnly) > limit) {
-            setTaskEditError(`Дедлайн не может быть позже ${limit.toLocaleDateString}`);
-            return;
-        }
-
-        try {
-            setTaskEditLoading(true);
-            const payload = {
-                Name: editTask.Name,
-                Description: editTask.Description,
-                DurationDays: Number(editTask.DurationDays) || 1,
-                Status: Number(editTask.Status),
-                Deadline: editTask.DeadlineDateOnly ? new Date(editTask.DeadlineDateOnly).toISOString() : null,
-                ParentTaskId: editTask.ParentTaskId || null,
-                ExecutorIds: selectedExecutors.length ? selectedExecutors : null
-            };
-            const updated = await updateTask(editTask.Id, payload);
-            await loadProjectDetails();
-            setEditTask(null);
-            return updated;
-        } catch (err) {
-            setTaskEditError(err.message || 'Не удалось обновить задачу');
-        } finally {
-            setTaskEditLoading(false);
-        }
     };
 
     const handleSave = async () => {
@@ -203,6 +160,17 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
         return statuses[status] || 'Создана';
     };
 
+    const getTaskStatusClass = (status) => {
+        const statuses = {
+            0: 'status-created',
+            1: 'status-available',
+            2: 'status-in-progress',
+            3: 'status-done',
+            4: 'status-cancelled'
+        };
+        return statuses[status] || 'status-unknown';
+    };
+
     const formatDate = (dateString) => {
         if (!dateString) return 'Не указано';
         try {
@@ -222,6 +190,92 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
             assignedAt: task.AssignedAt || task.assignedAt || null
         }));
     }, [tasks]);
+
+    const taskIndex = useMemo(() => new Map(tasks.map(task => [task.Id, task])), [tasks]);
+
+    const orderedTasks = useMemo(() => {
+        const childrenByParent = new Map();
+
+        tasks.forEach((task) => {
+            const parentId = task.ParentTaskId || null;
+            if (!childrenByParent.has(parentId)) {
+                childrenByParent.set(parentId, []);
+            }
+
+            childrenByParent.get(parentId).push(task);
+        });
+
+        childrenByParent.forEach((items) => {
+            items.sort((left, right) => {
+                const leftDate = left.AssignedAt || left.assignedAt || '';
+                const rightDate = right.AssignedAt || right.assignedAt || '';
+                return String(leftDate).localeCompare(String(rightDate));
+            });
+        });
+
+        const result = [];
+        const visited = new Set();
+
+        const walk = (parentId, level) => {
+            const branch = childrenByParent.get(parentId) || [];
+            branch.forEach((task) => {
+                if (visited.has(task.Id)) {
+                    return;
+                }
+
+                visited.add(task.Id);
+                result.push({ ...task, __level: level });
+                walk(task.Id, level + 1);
+            });
+        };
+
+        walk(null, 0);
+
+        tasks.forEach((task) => {
+            if (!visited.has(task.Id)) {
+                result.push({ ...task, __level: 0 });
+            }
+        });
+
+        return result;
+    }, [tasks]);
+
+    const resolveLinkedTasks = (task, taskRefsKey, taskIdsKey) => {
+        const references = Array.isArray(task?.[taskRefsKey]) ? task[taskRefsKey] : [];
+        if (references.length > 0) {
+            return references;
+        }
+
+        const ids = Array.isArray(task?.[taskIdsKey]) ? task[taskIdsKey] : [];
+        return ids
+            .map(id => {
+                const linkedTask = taskIndex.get(id);
+                if (!linkedTask) {
+                    return null;
+                }
+
+                return {
+                    Id: linkedTask.Id,
+                    Name: linkedTask.Name,
+                    Status: linkedTask.Status
+                };
+            })
+            .filter(Boolean);
+    };
+
+    const focusTask = (taskId) => {
+        if (!taskId) {
+            return;
+        }
+
+        setHighlightedTaskId(taskId);
+        setOpenTaskMenu(null);
+
+        window.requestAnimationFrame(() => {
+            const element = document.getElementById(`project-task-${taskId}`);
+            element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+    };
 
     if (!isOpen || !project) return null;
 
@@ -366,12 +420,23 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                         </div>
                         <div className="tasks-list">
                             {tasks.length > 0 ? (
-                                tasks.map(task => (
-                                    <div key={task.Id} className="task-item">
+                                orderedTasks.map(task => {
+                                    const dependencyTasks = resolveLinkedTasks(task, 'DependencyTasks', 'DependencyIds');
+                                    const dependentTasks = resolveLinkedTasks(task, 'DependentTasks', 'DependentIds');
+                                    const parentTask = task.ParentTaskId ? taskIndex.get(task.ParentTaskId) : null;
+                                    const subtaskCount = Array.isArray(task.SubtaskIds) ? task.SubtaskIds.length : 0;
+
+                                    return (
+                                    <div
+                                        key={task.Id}
+                                        id={`project-task-${task.Id}`}
+                                        className={`task-item ${highlightedTaskId === task.Id ? 'task-item-highlighted' : ''}`}
+                                        style={{ marginLeft: `${Math.min(task.__level || 0, 3) * 26}px` }}
+                                    >
                                         <div className="task-header">
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
                                                 <span className="task-name">{task.Name}</span>
-                                                <span className="task-status">{getTaskStatusText(task.Status)}</span>
+                                                <span className={`task-status ${getTaskStatusClass(task.Status)}`}>{getTaskStatusText(task.Status)}</span>
                                             </div>
                                             <div style={{ position: 'relative' }}>
                                                 {isUserLeader() && (
@@ -438,8 +503,64 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                                                 )}
                                             </div>
                                         </div>
+                                        <div className="task-meta-strip">
+                                            {(task.__level || 0) > 0 && (
+                                                <span className="task-meta-pill task-meta-pill--subtask">
+                                                    Подзадача
+                                                    {parentTask?.Name ? ` · ${parentTask.Name}` : ''}
+                                                </span>
+                                            )}
+                                            {subtaskCount > 0 && (
+                                                <span className="task-meta-pill">
+                                                    Подзадач: {subtaskCount}
+                                                </span>
+                                            )}
+                                            {dependencyTasks.length > 0 && (
+                                                <span className="task-meta-pill">
+                                                    Зависимостей: {dependencyTasks.length}
+                                                </span>
+                                            )}
+                                        </div>
                                         {task.Description && (
                                             <p className="task-description">{task.Description}</p>
+                                        )}
+                                        {(dependencyTasks.length > 0 || dependentTasks.length > 0) && (
+                                            <div className="task-relations">
+                                                {dependencyTasks.length > 0 && (
+                                                    <div className="task-relations-row">
+                                                        <span className="task-relations-label">Зависит от</span>
+                                                        <div className="task-relations-list">
+                                                            {dependencyTasks.map(linkedTask => (
+                                                                <button
+                                                                    key={linkedTask.Id}
+                                                                    type="button"
+                                                                    className={`task-relation-link ${getTaskStatusClass(linkedTask.Status)}`}
+                                                                    onClick={() => focusTask(linkedTask.Id)}
+                                                                >
+                                                                    {linkedTask.Name}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {dependentTasks.length > 0 && (
+                                                    <div className="task-relations-row">
+                                                        <span className="task-relations-label">Разблокирует</span>
+                                                        <div className="task-relations-list">
+                                                            {dependentTasks.map(linkedTask => (
+                                                                <button
+                                                                    key={linkedTask.Id}
+                                                                    type="button"
+                                                                    className={`task-relation-link ${getTaskStatusClass(linkedTask.Status)}`}
+                                                                    onClick={() => focusTask(linkedTask.Id)}
+                                                                >
+                                                                    {linkedTask.Name}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         )}
                                         <div className="task-actions">
                                             {canCreateSubtask(task) && (
@@ -453,7 +574,8 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                                             )}
                                         </div>
                                     </div>
-                                ))
+                                    );
+                                })
                             ) : (
                                 <p className="no-tasks">Нет задач</p>
                             )}

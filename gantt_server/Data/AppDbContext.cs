@@ -12,7 +12,10 @@ namespace gantt_server.Data
         public DbSet<Executor> Executors => Set<Executor>();
         public DbSet<Project> Projects => Set<Project>();
         public DbSet<ProjectTask> ProjectTasks => Set<ProjectTask>();
+        public DbSet<PendingRegistration> PendingRegistrations => Set<PendingRegistration>();
         public DbSet<TaskComment> TaskComments => Set<TaskComment>();
+        public DbSet<TaskCommentAttachment> TaskCommentAttachments => Set<TaskCommentAttachment>();
+        public DbSet<TaskCommentRead> TaskCommentReads => Set<TaskCommentRead>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -21,9 +24,12 @@ namespace gantt_server.Data
             OnModelExecutorCreating(modelBuilder);
             OnModelProjectCreating(modelBuilder);
             OnModelProjectTaskCreating(modelBuilder);
+            OnModelPendingRegistrationCreating(modelBuilder);
             OnModelTaskDependenciesCreating(modelBuilder);
             OnModelTaskExecutorsCreating(modelBuilder);
             OnModelTaskCommentsCreating(modelBuilder);
+            OnModelTaskCommentAttachmentsCreating(modelBuilder);
+            OnModelTaskCommentReadsCreating(modelBuilder);
         }
 
         private static void OnModelStudentCreating(ModelBuilder modelBuilder)
@@ -36,6 +42,7 @@ namespace gantt_server.Data
                 b.Property(s => s.FirstName).IsRequired();
                 b.Property(s => s.LastName).IsRequired();
                 b.Property(s => s.Email).IsRequired();
+                b.Property(s => s.EmailConfirmed).IsRequired();
                 b.Property(s => s.PasswordHash).IsRequired();
                 b.Property(s => s.CreatedAt).IsRequired();
 
@@ -63,7 +70,7 @@ namespace gantt_server.Data
 
             modelBuilder.Entity<Executor>()
                 .HasOne(e => e.Team)
-                .WithMany()
+                .WithMany(t => t.Executors)
                 .HasForeignKey(e => e.TeamId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
@@ -95,6 +102,23 @@ namespace gantt_server.Data
                 .OnDelete(DeleteBehavior.Restrict);
         }
 
+        private static void OnModelPendingRegistrationCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<PendingRegistration>(b =>
+            {
+                b.ToTable("PendingRegistrations");
+                b.HasKey(r => r.Id);
+                b.Property(r => r.FirstName).IsRequired();
+                b.Property(r => r.LastName).IsRequired();
+                b.Property(r => r.Email).IsRequired();
+                b.Property(r => r.PasswordHash).IsRequired();
+                b.Property(r => r.VerificationToken).IsRequired();
+                b.Property(r => r.VerificationTokenExpiresAt).IsRequired();
+                b.Property(r => r.CreatedAt).IsRequired();
+                b.HasIndex(r => r.Email).IsUnique();
+            });
+        }
+
         private static void OnModelTaskDependenciesCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<ProjectTask>()
@@ -123,7 +147,7 @@ namespace gantt_server.Data
                     j => j.HasOne<Executor>().WithMany().HasForeignKey("ExecutorId")
                         .OnDelete(DeleteBehavior.Cascade),
                     j => j.HasOne<ProjectTask>().WithMany().HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Restrict),
+                        .OnDelete(DeleteBehavior.Cascade),
                     j =>
                     {
                         j.ToTable("TaskExecutors");
@@ -146,6 +170,39 @@ namespace gantt_server.Data
                 .WithMany()
                 .HasForeignKey(c => c.StudentId)
                 .OnDelete(DeleteBehavior.Restrict);
+        }
+
+        private static void OnModelTaskCommentAttachmentsCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<TaskCommentAttachment>().ToTable("TaskCommentAttachments");
+
+            modelBuilder.Entity<TaskCommentAttachment>()
+                .HasOne(a => a.Comment)
+                .WithMany(c => c.Attachments)
+                .HasForeignKey(a => a.CommentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TaskCommentAttachment>()
+                .Property(a => a.ImageDataUrl)
+                .IsRequired();
+        }
+
+        private static void OnModelTaskCommentReadsCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<TaskCommentRead>().ToTable("TaskCommentReads");
+            modelBuilder.Entity<TaskCommentRead>().HasKey(r => new { r.CommentId, r.StudentId });
+
+            modelBuilder.Entity<TaskCommentRead>()
+                .HasOne(r => r.Comment)
+                .WithMany(c => c.Reads)
+                .HasForeignKey(r => r.CommentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TaskCommentRead>()
+                .HasOne(r => r.Student)
+                .WithMany(s => s.ReadTaskComments)
+                .HasForeignKey(r => r.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

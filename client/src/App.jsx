@@ -25,11 +25,11 @@ function AppWrapper() {
 
 function AuthWrapper({ onAuth }) {
     const [isLogin, setIsLogin] = useState(true);
-    const toggleForm = () => setIsLogin(prev => !prev);
+    const toggleForm = () => setIsLogin((prev) => !prev);
 
     return isLogin
         ? <Login onAuth={onAuth} onToggleForm={toggleForm} />
-        : <Register onAuth={onAuth} onToggleForm={toggleForm} />;
+        : <Register onToggleForm={toggleForm} />;
 }
 
 function App() {
@@ -43,7 +43,7 @@ function App() {
 
         const newObj = {};
         for (const key in obj) {
-            if (obj.hasOwnProperty(key)) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
                 const camelKey = key.charAt(0).toLowerCase() + key.slice(1);
                 newObj[camelKey] = obj[key];
             }
@@ -59,17 +59,28 @@ function App() {
         }
 
         getMe()
-            .then(userData => {
+            .then((userData) => {
                 const student = pascalToCamel(userData);
                 setUser(student);
             })
-            .catch(err => {
+            .catch(() => {
                 setAuthError('Сессия истекла, войдите снова');
                 clearToken();
                 setUser(null);
             })
             .finally(() => setChecking(false));
     }, []);
+
+    useEffect(() => {
+        const handleUnauthorized = (event) => {
+            setUser(null);
+            setAuthError(event.detail?.message || 'Не получилось авторизоваться. Войдите снова.');
+            navigate('/login');
+        };
+
+        window.addEventListener('auth:unauthorized', handleUnauthorized);
+        return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+    }, [navigate]);
 
     const handleAuthSuccess = (data) => {
         let student;
@@ -106,36 +117,33 @@ function App() {
         <Routes>
             {!user && (
                 <>
-                    <Route path="/login" element={
-                        <AuthWrapper
-                            onAuth={handleAuthSuccess}
-                        />
-                    } />
-                    <Route path="/register" element={
-                        <AuthWrapper
-                            onAuth={handleAuthSuccess}
-                        />
-                    } />
+                    <Route path="/login" element={<AuthWrapper onAuth={handleAuthSuccess} />} />
+                    <Route path="/register" element={<AuthWrapper onAuth={handleAuthSuccess} />} />
                 </>
             )}
 
             {user && (
-                <Route element={
-                    <ProtectedRoute user={user}>
-                        <MainLayout onLogout={handleLogout} />
-                    </ProtectedRoute>
-                }>
+                <Route
+                    element={(
+                        <ProtectedRoute user={user}>
+                            <MainLayout onLogout={handleLogout} />
+                        </ProtectedRoute>
+                    )}
+                >
                     <Route index element={<Dashboard />} />
                     <Route path="/projects" element={<Projects user={user} />} />
                     <Route path="/teams" element={<Teams user={user} />} />
                     <Route path="/tasks" element={<ProjectTasks user={user} />} />
-                    <Route path="/profile" element={
-                        <Profile
-                            user={user}
-                            onUpdateUser={handleUpdateUser}
-                            onLogout={handleLogout}
-                        />
-                    } />
+                    <Route
+                        path="/profile"
+                        element={(
+                            <Profile
+                                user={user}
+                                onUpdateUser={handleUpdateUser}
+                                onLogout={handleLogout}
+                            />
+                        )}
+                    />
                 </Route>
             )}
 
@@ -144,11 +152,14 @@ function App() {
             {user && <Route path="/register" element={<Navigate to="/" replace />} />}
 
             {authError && (
-                <Route path="*" element={
-                    <div className="error-container">
-                        <p className="error">{authError}</p>
-                    </div>
-                } />
+                <Route
+                    path="*"
+                    element={(
+                        <div className="error-container">
+                            <p className="error">{authError}</p>
+                        </div>
+                    )}
+                />
             )}
         </Routes>
     );

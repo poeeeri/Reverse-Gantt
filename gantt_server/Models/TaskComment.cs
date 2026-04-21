@@ -10,6 +10,8 @@ namespace gantt_server.Models
         public Student Student { get; set; } = null!;
 
         public required string Content { get; set; }
+        public ICollection<TaskCommentAttachment> Attachments { get; set; } = new List<TaskCommentAttachment>();
+        public ICollection<TaskCommentRead> Reads { get; set; } = new List<TaskCommentRead>();
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

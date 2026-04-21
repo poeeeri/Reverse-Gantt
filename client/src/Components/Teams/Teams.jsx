@@ -23,16 +23,27 @@ const Teams = ({ user }) => {
     const [teamForAddingMember, setTeamForAddingMember] = useState(null);
 
     useEffect(() => {
-        loadTeams();
-    }, []);
+        if (user && user.id) {
+            loadTeams();
+        }
+    }, [user]);
 
     const loadTeams = async () => {
         try {
             setLoading(true);
             const teamsData = await getMyTeams();
-            console.log('Teams data:', teamsData);
+            console.log('All teams data from server:', teamsData);
 
-            const processedTeams = (teamsData || []).map(team => ({
+            const filteredTeams = (teamsData || []).filter(team => {
+                const isUserInTeam = team.Executors?.some(executor =>
+                    executor.StudentId === user.id
+                );
+                return isUserInTeam;
+            });
+
+            console.log('Filtered teams for user:', filteredTeams);
+
+            const processedTeams = filteredTeams.map(team => ({
                 id: team.Id,
                 name: team.Name,
                 description: team.Description,
@@ -42,7 +53,7 @@ const Teams = ({ user }) => {
 
             setTeams(processedTeams);
         } catch (err) {
-            setError('Ошибка загрузки команд');
+            setError(err.message || 'Ошибка загрузки команд');
             console.error('Error loading teams:', err);
         } finally {
             setLoading(false);
@@ -181,6 +192,7 @@ const Teams = ({ user }) => {
                 {!teams || teams.length === 0 ? (
                     <div className="no-teams">
                         <p>Вы пока не состоите ни в одной команде</p>
+                        <p className="no-teams-hint">Создайте новую команду или попросите лидера существующей команды добавить вас</p>
                     </div>
                 ) : (
                     teams.map(team => (
@@ -265,33 +277,33 @@ const Teams = ({ user }) => {
                                     <div className="projects-list">
                                         {team.projects.length > 0 ? (
                                             team.projects.map(project => (
-                                            <div
-                                                key={project.Id}
-                                                className="project-item"
-                                            >
-                                                <div className="project-info">
-                                                    <h4 className="project-name" onClick={() => handleProjectClick(project)}>{project.Name || 'Без названия'}</h4>
-                                                    <p className="project-description">
-                                                        {project.Description || 'Описание отсутствует'}
-                                                    </p>
-                                                    <div className="project-meta">
-                                                        <span className="project-subject">{project.Subject || 'Без темы'}</span>
-                                                        <span className="project-deadline">
-                                                            До: {formatDate(project.FinalDeadline)}
-                                                        </span>
-                                                    </div>
-                                                    {isUserLeader(team) && (
-                                                        <div className="project-actions">
-                                                            <button
-                                                                className="delete-project-btn"
-                                                                onClick={() => handleDeleteProject(team, project)}
-                                                            >
-                                                                Удалить проект
-                                                            </button>
+                                                <div
+                                                    key={project.Id}
+                                                    className="project-item"
+                                                >
+                                                    <div className="project-info">
+                                                        <h4 className="project-name" onClick={() => handleProjectClick(project)}>{project.Name || 'Без названия'}</h4>
+                                                        <p className="project-description">
+                                                            {project.Description || 'Описание отсутствует'}
+                                                        </p>
+                                                        <div className="project-meta">
+                                                            <span className="project-subject">{project.Subject || 'Без темы'}</span>
+                                                            <span className="project-deadline">
+                                                                До: {formatDate(project.FinalDeadline)}
+                                                            </span>
                                                         </div>
-                                                    )}
+                                                        {isUserLeader(team) && (
+                                                            <div className="project-actions">
+                                                                <button
+                                                                    className="delete-project-btn"
+                                                                    onClick={() => handleDeleteProject(team, project)}
+                                                                >
+                                                                    Удалить проект
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
                                             ))
                                         ) : (
                                             <p className="no-projects">Нет активных проектов</p>
@@ -310,12 +322,14 @@ const Teams = ({ user }) => {
                 onProjectCreated={handleProjectCreated}
                 teamId={selectedTeam?.id}
                 teamName={selectedTeam?.name}
+                user={user}
             />
 
             <CreateTeamModal
                 isOpen={createTeamModalOpen}
                 onClose={() => setCreateTeamModalOpen(false)}
                 onTeamCreated={handleTeamCreated}
+                user={user}
             />
 
             <TeamMemberModal

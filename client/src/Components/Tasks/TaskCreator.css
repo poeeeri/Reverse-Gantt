@@ -77,6 +77,13 @@
     margin-bottom: 8px;
 }
 
+.task-creator__list-note {
+    margin-bottom: 10px;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: #8e596c;
+}
+
 .task-creator__checkboxes {
     display: flex;
     flex-direction: column;

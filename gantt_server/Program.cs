@@ -15,32 +15,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ---------------- JWT ----------------
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
-
-var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()
-          ?? throw new InvalidOperationException("Конфигурация Jwt отсутствует");
-
-if (string.IsNullOrWhiteSpace(jwt.Issuer))
-    throw new InvalidOperationException("Jwt:Issuer не настроен");
-
-if (string.IsNullOrWhiteSpace(jwt.Audience))
-    throw new InvalidOperationException("Jwt:Audience не настроен");
-
-if (string.IsNullOrWhiteSpace(jwt.Key))
-    throw new InvalidOperationException("Jwt:Key не настроен");
-
-static byte[] ResolveJwtKeyBytes(string key)
-{
-    try
-    {
-        return Convert.FromBase64String(key);
-    }
-    catch (FormatException)
-    {
-        return Encoding.UTF8.GetBytes(key);
-    }
-}
-
-var jwtKeyBytes = ResolveJwtKeyBytes(jwt.Key);
+builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
+var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()!;
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -138,6 +114,7 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddScoped<IProjectTaskService, ProjectTaskService>();
@@ -198,6 +175,22 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     context.Database.Migrate();
+
+    var legacyStudents = context.Students
+        .Where(s => !s.EmailConfirmed)
+        .ToList();
+
+    if (legacyStudents.Count > 0)
+    {
+        foreach (var student in legacyStudents)
+        {
+            student.EmailConfirmed = true;
+            student.EmailVerificationToken = null;
+            student.EmailVerificationTokenExpiresAt = null;
+        }
+
+        context.SaveChanges();
+    }
 }
 
 app.UseCors("client");

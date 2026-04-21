@@ -15,7 +15,7 @@ namespace gantt_server.Services.Interfaces
         Task<ProjectTaskDto?> RemoveDependencyAsync(Guid id, Guid dependencyId, CancellationToken ct);
         Task<ProjectTaskDto?> AssignExecutorAsync(Guid id, Guid executorId, CancellationToken ct);
         Task<ProjectTaskDto?> UnassignExecutorAsync(Guid id, Guid executorId, CancellationToken ct);
-        Task<IReadOnlyList<TaskCommentDto>> GetCommentsAsync(Guid taskId, CancellationToken ct);
+        Task<IReadOnlyList<TaskCommentDto>> GetCommentsAsync(Guid taskId, Guid? viewerStudentId, CancellationToken ct);
         Task<TaskCommentDto?> AddCommentAsync(Guid taskId, TaskCommentCreateDto dto, CancellationToken ct);
         Task<TaskCommentDto?> UpdateCommentAsync(Guid taskId, Guid commentId, TaskCommentUpdateDto dto, CancellationToken ct);
         Task<bool> DeleteCommentAsync(Guid taskId, Guid commentId, CancellationToken ct);

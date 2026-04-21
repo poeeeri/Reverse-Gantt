@@ -125,6 +125,15 @@ namespace gantt_server.Services
                 .Include(p => p.Tasks)
                     .ThenInclude(t => t.DependentTasks)
                 .Include(p => p.Tasks)
+                    .ThenInclude(t => t.Comments)
+                        .ThenInclude(c => c.Student)
+                .Include(p => p.Tasks)
+                    .ThenInclude(t => t.Comments)
+                        .ThenInclude(c => c.Attachments)
+                .Include(p => p.Tasks)
+                    .ThenInclude(t => t.Comments)
+                        .ThenInclude(c => c.Reads)
+                .Include(p => p.Tasks)
                     .ThenInclude(t => t.Executors)
                         .ThenInclude(e => e.Student);
     }

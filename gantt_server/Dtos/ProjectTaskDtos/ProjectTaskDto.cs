@@ -11,13 +11,15 @@ namespace gantt_server.Dtos.ProjectTaskDtos
         public string? Description { get; init; }
         public int DurationDays { get; init; }
         public ProjectTaskStatus Status { get; init; }
-        public DateTime? Deadline { get; init; }
         public Guid? ParentTaskId { get; init; }
         public IReadOnlyList<Guid> SubtaskIds { get; init; } = Array.Empty<Guid>();
         public IReadOnlyList<Guid> DependencyIds { get; init; } = Array.Empty<Guid>();
         public IReadOnlyList<Guid> DependentIds { get; init; } = Array.Empty<Guid>();
+        public IReadOnlyList<ProjectTaskReferenceDto> DependencyTasks { get; init; } = Array.Empty<ProjectTaskReferenceDto>();
+        public IReadOnlyList<ProjectTaskReferenceDto> DependentTasks { get; init; } = Array.Empty<ProjectTaskReferenceDto>();
         public IReadOnlyList<ProjectTaskExecutorDto> Executors { get; init; } = Array.Empty<ProjectTaskExecutorDto>();
         public IReadOnlyList<TaskCommentDto> Comments { get; init; } = Array.Empty<TaskCommentDto>();
+        public int UnreadCommentsCount { get; init; }
         public DateTime AssignedAt { get; init; }
     }
 }
