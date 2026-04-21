@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { login } from '../../api/auth';
+import { login, resendConfirmation } from '../../api/auth';
 import './Auth.css';
 
 const Login = ({ onToggleForm, onAuth }) => {
@@ -8,30 +8,52 @@ const Login = ({ onToggleForm, onAuth }) => {
         password: ''
     });
     const [loading, setLoading] = useState(false);
+    const [resending, setResending] = useState(false);
     const [error, setError] = useState('');
+    const [info, setInfo] = useState('');
 
-    const handleChange = (e) => {
+    const handleChange = (event) => {
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value
+            [event.target.name]: event.target.value
         });
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async (event) => {
+        event.preventDefault();
         setError('');
+        setInfo('');
         setLoading(true);
+
         try {
             const data = await login(formData);
             const student = data.student ?? data.Student;
             const token = data.token ?? data.Token;
-
-            localStorage.setItem('token', token);
             onAuth({ student, token });
         } catch (err) {
             setError(err.message || 'Ошибка авторизации');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleResend = async () => {
+        if (!formData.email.trim()) {
+            setError('Введите email, чтобы отправить письмо повторно');
+            return;
+        }
+
+        setResending(true);
+        setError('');
+        setInfo('');
+
+        try {
+            const data = await resendConfirmation(formData.email);
+            setInfo(data.message || data.Message || 'Письмо отправлено повторно');
+        } catch (err) {
+            setError(err.message || 'Не удалось отправить письмо повторно');
+        } finally {
+            setResending(false);
         }
     };
 
@@ -63,8 +85,12 @@ const Login = ({ onToggleForm, onAuth }) => {
                         />
                     </div>
                     {error && <p className="error">{error}</p>}
+                    {info && <p className="success-message">{info}</p>}
                     <button type="submit" className="auth-button" disabled={loading}>
                         {loading ? 'Вход...' : 'Войти'}
+                    </button>
+                    <button type="button" className="auth-secondary-button" disabled={resending} onClick={handleResend}>
+                        {resending ? 'Отправляем письмо...' : 'Отправить письмо повторно'}
                     </button>
                 </form>
                 <p className="auth-toggle">

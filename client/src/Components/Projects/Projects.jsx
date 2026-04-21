@@ -76,7 +76,7 @@ const Projects = ({ user }) => {
             setFilteredProjects(userProjects);
 
         } catch (err) {
-            setError('Ошибка загрузки данных');
+            setError(err.message || 'Ошибка загрузки данных');
             console.error('Error loading data:', err);
         } finally {
             setLoading(false);

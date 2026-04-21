@@ -18,6 +18,18 @@ namespace gantt_server.Mappings
             ProjectTasks = project.Tasks?.Select(t => t.ToDto()).ToArray() ?? Array.Empty<ProjectTaskDto>()
         };
 
+        public static ProjectReadDto ToReadDto(this Project project, Guid viewerStudentId) => new()
+        {
+            Id = project.Id,
+            Name = project.Name,
+            Description = project.Description,
+            Subject = project.Subject,
+            FinalDeadline = project.FinalDeadline,
+            Status = project.Status,
+            TeamId = project.TeamId,
+            ProjectTasks = project.Tasks?.Select(t => t.ToDto(viewerStudentId)).ToArray() ?? Array.Empty<ProjectTaskDto>()
+        };
+
         public static IEnumerable<ProjectReadDto> ToReadDtos(this IEnumerable<Project> projects) =>
             projects.Select(ToReadDto);
 

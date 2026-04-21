@@ -12,6 +12,7 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
 var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()!;
 
 builder.Services
@@ -82,6 +83,7 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddScoped<IProjectTaskService, ProjectTaskService>();
@@ -116,6 +118,22 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<AppDbContext>();
     context.Database.Migrate();
+
+    var legacyStudents = context.Students
+        .Where(s => !s.EmailConfirmed)
+        .ToList();
+
+    if (legacyStudents.Count > 0)
+    {
+        foreach (var student in legacyStudents)
+        {
+            student.EmailConfirmed = true;
+            student.EmailVerificationToken = null;
+            student.EmailVerificationTokenExpiresAt = null;
+        }
+
+        context.SaveChanges();
+    }
 }
 
 app.UseCors("client");

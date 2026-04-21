@@ -53,7 +53,7 @@ const Teams = ({ user }) => {
 
             setTeams(processedTeams);
         } catch (err) {
-            setError('Ошибка загрузки команд');
+            setError(err.message || 'Ошибка загрузки команд');
             console.error('Error loading teams:', err);
         } finally {
             setLoading(false);
@@ -329,6 +329,7 @@ const Teams = ({ user }) => {
                 isOpen={createTeamModalOpen}
                 onClose={() => setCreateTeamModalOpen(false)}
                 onTeamCreated={handleTeamCreated}
+                user={user}
             />
 
             <TeamMemberModal

@@ -15,8 +15,11 @@ namespace gantt_server.Dtos.ProjectTaskDtos
         public IReadOnlyList<Guid> SubtaskIds { get; init; } = Array.Empty<Guid>();
         public IReadOnlyList<Guid> DependencyIds { get; init; } = Array.Empty<Guid>();
         public IReadOnlyList<Guid> DependentIds { get; init; } = Array.Empty<Guid>();
+        public IReadOnlyList<ProjectTaskReferenceDto> DependencyTasks { get; init; } = Array.Empty<ProjectTaskReferenceDto>();
+        public IReadOnlyList<ProjectTaskReferenceDto> DependentTasks { get; init; } = Array.Empty<ProjectTaskReferenceDto>();
         public IReadOnlyList<ProjectTaskExecutorDto> Executors { get; init; } = Array.Empty<ProjectTaskExecutorDto>();
         public IReadOnlyList<TaskCommentDto> Comments { get; init; } = Array.Empty<TaskCommentDto>();
+        public int UnreadCommentsCount { get; init; }
         public DateTime AssignedAt { get; init; }
     }
 }

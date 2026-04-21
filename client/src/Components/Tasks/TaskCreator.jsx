@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createTask, updateTask } from '../../api/task';
 import './TaskCreator.css';
 
@@ -6,11 +6,23 @@ const statusOptions = [
     { value: 0, label: 'Создана' },
     { value: 1, label: 'Доступна' },
     { value: 2, label: 'В процессе' },
-    { value: 3, label: 'Сделано' },
+    { value: 3, label: 'Сделана' },
     { value: 4, label: 'Отменена' }
 ];
 
-const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId, lockParent = false, title = 'Создать задачу / подзадачу', existingTask = null, onUpdated = null, onCancel = null }) => {
+const TaskCreator = ({
+    projectId,
+    team,
+    tasks,
+    user,
+    onCreated,
+    defaultParentId,
+    lockParent = false,
+    title = 'Создать задачу / подзадачу',
+    existingTask = null,
+    onUpdated = null,
+    onCancel = null
+}) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [durationDays, setDurationDays] = useState(1);
@@ -24,32 +36,39 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
 
     const currentTaskId = existingTask?.Id || existingTask?.id || null;
     const availableExecutors = useMemo(() => team?.Executors || [], [team]);
+
     const dependencyCandidates = useMemo(() => {
-        return (tasks || []).filter((t) => {
-            const id = t.Id || t.id;
+        return (tasks || []).filter((task) => {
+            const id = task.Id || task.id;
             if (!id) return false;
             if (currentTaskId && id === currentTaskId) return false;
-            const deps = t.DependencyIds || t.dependencyIds || [];
+
+            const deps = task.DependencyIds || task.dependencyIds || [];
             if (currentTaskId && deps.includes(currentTaskId)) return false;
+
             return true;
         });
     }, [tasks, currentTaskId]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         setParentTaskId(defaultParentId || '');
     }, [defaultParentId]);
 
     useEffect(() => {
-        if (existingTask) {
-            setName(existingTask.Name || existingTask.name || '');
-            setDescription(existingTask.Description || existingTask.description || '');
-            setDurationDays(existingTask.DurationDays || existingTask.durationDays || 1);
-            setStatus(existingTask.Status ?? existingTask.status ?? 0);
-            setParentTaskId(existingTask.ParentTaskId || existingTask.parentTaskId || defaultParentId || '');
-            setDependencyIds(existingTask.DependencyIds ? [...existingTask.DependencyIds] : (existingTask.dependencyIds ? [...existingTask.dependencyIds] : []));
-            setExecutorIds(existingTask.ExecutorIds ? [...existingTask.ExecutorIds] : (existingTask.Executors ? existingTask.Executors.map(e => e.Id) : []));
-        }
-    }, [existingTask]);
+        if (!existingTask) return;
+
+        setName(existingTask.Name || existingTask.name || '');
+        setDescription(existingTask.Description || existingTask.description || '');
+        setDurationDays(existingTask.DurationDays || existingTask.durationDays || 1);
+        setStatus(existingTask.Status ?? existingTask.status ?? 0);
+        setParentTaskId(existingTask.ParentTaskId || existingTask.parentTaskId || defaultParentId || '');
+        setDependencyIds(existingTask.DependencyIds ? [...existingTask.DependencyIds] : (existingTask.dependencyIds ? [...existingTask.dependencyIds] : []));
+        setExecutorIds(
+            existingTask.ExecutorIds
+                ? [...existingTask.ExecutorIds]
+                : (existingTask.Executors ? existingTask.Executors.map((executor) => executor.Id) : [])
+        );
+    }, [existingTask, defaultParentId]);
 
     const resetForm = () => {
         setName('');
@@ -62,19 +81,19 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
     };
 
     const toggleDependency = (id) => {
-        setDependencyIds((prev) =>
-            prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]
-        );
+        setDependencyIds((prev) => (
+            prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+        ));
     };
 
     const toggleExecutor = (id) => {
-        setExecutorIds((prev) =>
-            prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]
-        );
+        setExecutorIds((prev) => (
+            prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+        ));
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async (event) => {
+        event.preventDefault();
         setError('');
         setSuccess('');
 
@@ -82,7 +101,7 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
             setError('Укажите название задачи.');
             return;
         }
-        
+
         if (availableExecutors.length > 0 && executorIds.length === 0) {
             setError('Выберите хотя бы одного исполнителя для задачи.');
             return;
@@ -90,6 +109,7 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
 
         try {
             setLoading(true);
+
             const payload = {
                 Name: name.trim(),
                 Description: description.trim() || null,
@@ -99,7 +119,7 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
                 TeamId: team?.Id,
                 DependencyIds: dependencyIds.length ? dependencyIds : null,
                 ExecutorIds: executorIds.length ? executorIds : null,
-                ActorExecutorId: team?.Executors?.find((ex) => ex.StudentId === user?.id)?.Id
+                ActorExecutorId: team?.Executors?.find((executor) => executor.StudentId === user?.id)?.Id
             };
 
             if (existingTask) {
@@ -119,11 +139,16 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
         }
     };
 
-    const renderTaskOption = (t) => `${t.Name || t.name} (${t.Id || t.id})`;
+    const renderTaskOption = (task) => {
+        const taskStatus = task.Status ?? task.status;
+        const label = statusOptions.find((option) => option.value === taskStatus)?.label || 'Без статуса';
+        return `${task.Name || task.name} • ${label}`;
+    };
 
     return (
         <div className="task-creator">
             <h3 className="task-creator__title">{title}</h3>
+
             <form onSubmit={handleSubmit} className="task-creator__form">
                 <div className="task-creator__grid">
                     <label className="task-creator__field">
@@ -131,7 +156,7 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
                         <input
                             type="text"
                             value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            onChange={(event) => setName(event.target.value)}
                             placeholder="Например: Подготовить черновик отчета"
                             required
                         />
@@ -143,15 +168,15 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
                             type="number"
                             min="1"
                             value={durationDays}
-                            onChange={(e) => setDurationDays(e.target.value)}
+                            onChange={(event) => setDurationDays(event.target.value)}
                         />
                     </label>
 
                     <label className="task-creator__field">
                         <span>Статус</span>
-                        <select value={status} onChange={(e) => setStatus(e.target.value)}>
-                            {statusOptions.map((opt) => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        <select value={status} onChange={(event) => setStatus(event.target.value)}>
+                            {statusOptions.map((option) => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
                             ))}
                         </select>
                     </label>
@@ -161,7 +186,7 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
                         <textarea
                             rows="3"
                             value={description}
-                            onChange={(e) => setDescription(e.target.value)}
+                            onChange={(event) => setDescription(event.target.value)}
                             placeholder="Кратко: что нужно получить в результате"
                         />
                     </label>
@@ -170,13 +195,13 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
                         <span>Родительская задача</span>
                         <select
                             value={parentTaskId}
-                            onChange={(e) => setParentTaskId(e.target.value)}
+                            onChange={(event) => setParentTaskId(event.target.value)}
                             disabled={lockParent}
                         >
-                            <option value="">Нет (корневая)</option>
-                            {(tasks || []).map((t) => (
-                                <option key={t.Id || t.id} value={t.Id || t.id}>
-                                    {renderTaskOption(t)}
+                            <option value="">Нет, это корневая задача</option>
+                            {(tasks || []).map((task) => (
+                                <option key={task.Id || task.id} value={task.Id || task.id}>
+                                    {renderTaskOption(task)}
                                 </option>
                             ))}
                         </select>
@@ -185,18 +210,21 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
 
                 <div className="task-creator__lists">
                     <div className="task-creator__list">
-                        <div className="task-creator__list-title">Зависимости</div>
+                        <div className="task-creator__list-title">Связанные задачи</div>
+                        <div className="task-creator__list-note">
+                            Отметьте задачи, от которых зависит текущая. После сохранения в карточке появятся кликабельные переходы.
+                        </div>
                         <div className="task-creator__checkboxes">
-                            {dependencyCandidates.length === 0 && <span className="task-creator__empty">Пока нет задач</span>}
-                            {dependencyCandidates.map((t) => (
-                                <label key={t.Id || t.id} className="task-creator__checkbox">
+                            {dependencyCandidates.length === 0 && <span className="task-creator__empty">Пока нет задач для связывания</span>}
+                            {dependencyCandidates.map((task) => (
+                                <label key={task.Id || task.id} className="task-creator__checkbox">
                                     <input
                                         type="checkbox"
-                                        checked={dependencyIds.includes(t.Id || t.id)}
-                                        onChange={() => toggleDependency(t.Id || t.id)}
-                                        disabled={(t.Id || t.id) === parentTaskId}
+                                        checked={dependencyIds.includes(task.Id || task.id)}
+                                        onChange={() => toggleDependency(task.Id || task.id)}
+                                        disabled={(task.Id || task.id) === parentTaskId}
                                     />
-                                    <span>{renderTaskOption(t)}</span>
+                                    <span>{renderTaskOption(task)}</span>
                                 </label>
                             ))}
                         </div>
@@ -206,14 +234,14 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
                         <div className="task-creator__list-title">Исполнители</div>
                         <div className="task-creator__checkboxes">
                             {availableExecutors.length === 0 && <span className="task-creator__empty">Нет исполнителей в команде</span>}
-                            {availableExecutors.map((ex) => (
-                                <label key={ex.Id} className="task-creator__checkbox">
+                            {availableExecutors.map((executor) => (
+                                <label key={executor.Id} className="task-creator__checkbox">
                                     <input
                                         type="checkbox"
-                                        checked={executorIds.includes(ex.Id)}
-                                        onChange={() => toggleExecutor(ex.Id)}
+                                        checked={executorIds.includes(executor.Id)}
+                                        onChange={() => toggleExecutor(executor.Id)}
                                     />
-                                    <span>{ex.StudentName || 'Без имени'}</span>
+                                    <span>{executor.StudentName || 'Без имени'}</span>
                                 </label>
                             ))}
                         </div>
@@ -230,6 +258,7 @@ const TaskCreator = ({ projectId, team, tasks, user, onCreated, defaultParentId,
                     <button type="submit" className="task-creator__submit" disabled={loading}>
                         {loading ? (existingTask ? 'Сохраняем...' : 'Создаем...') : (existingTask ? 'Сохранить изменения' : 'Создать задачу')}
                     </button>
+
                     {existingTask ? (
                         <button type="button" className="task-creator__reset" onClick={() => onCancel?.()} disabled={loading}>
                             Отмена

@@ -8,12 +8,17 @@ export const login = async (credentials) => {
             password: credentials.password
         }
     });
-    setToken(data.token);
+
+    const token = data.token ?? data.Token;
+    if (token) {
+        setToken(token);
+    }
+
     return data;
 };
 
 export const register = async (payload) => {
-    const data = await apiFetch('/auth/register', {
+    return apiFetch('/auth/register', {
         method: 'POST',
         body: {
             email: payload.email,
@@ -22,8 +27,13 @@ export const register = async (payload) => {
             lastName: payload.lastName
         }
     });
-    setToken(data.token);
-    return data;
+};
+
+export const resendConfirmation = async (email) => {
+    return apiFetch('/auth/resend-confirmation', {
+        method: 'POST',
+        body: { email }
+    });
 };
 
 export const getMe = async () => apiFetch('/auth/me');

@@ -7,6 +7,8 @@ namespace gantt_server.Dtos.ProjectTaskDtos
         public Guid StudentId { get; init; }
         public string AuthorName { get; init; } = string.Empty;
         public string Content { get; init; } = string.Empty;
+        public IReadOnlyList<TaskCommentAttachmentDto> Attachments { get; init; } = Array.Empty<TaskCommentAttachmentDto>();
         public DateTime CreatedAt { get; init; }
+        public bool IsRead { get; init; }
     }
 }

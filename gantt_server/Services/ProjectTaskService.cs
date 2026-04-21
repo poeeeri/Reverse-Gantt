@@ -19,7 +19,9 @@ namespace gantt_server.Services
                 .Include(t => t.Dependencies)
                 .Include(t => t.DependentTasks)
                 .Include(t => t.Executors).ThenInclude(e => e.Student)
-                .Include(t => t.Comments).ThenInclude(c => c.Student);
+                .Include(t => t.Comments).ThenInclude(c => c.Student)
+                .Include(t => t.Comments).ThenInclude(c => c.Attachments)
+                .Include(t => t.Comments).ThenInclude(c => c.Reads);
 
         public async Task<IReadOnlyList<ProjectTaskDto>> GetByProjectAsync(Guid projectId, CancellationToken ct)
         {
@@ -204,14 +206,38 @@ namespace gantt_server.Services
             return (await QueryWithDetails().AsNoTracking().FirstAsync(t => t.Id == id, ct)).ToDto();
         }
 
-        public async Task<IReadOnlyList<TaskCommentDto>> GetCommentsAsync(Guid taskId, CancellationToken ct)
+        public async Task<IReadOnlyList<TaskCommentDto>> GetCommentsAsync(Guid taskId, Guid? viewerStudentId, CancellationToken ct)
         {
             var task = await _db.ProjectTasks
                 .Include(t => t.Comments).ThenInclude(c => c.Student)
-                .AsNoTracking()
+                .Include(t => t.Comments).ThenInclude(c => c.Attachments)
+                .Include(t => t.Comments).ThenInclude(c => c.Reads)
                 .FirstOrDefaultAsync(t => t.Id == taskId, ct);
 
             if (task is null) return Array.Empty<TaskCommentDto>();
+
+            if (viewerStudentId.HasValue)
+            {
+                var unreadComments = task.Comments
+                    .Where(c => c.StudentId != viewerStudentId.Value && !c.Reads.Any(r => r.StudentId == viewerStudentId.Value))
+                    .ToList();
+
+                foreach (var comment in unreadComments)
+                {
+                    comment.Reads.Add(new TaskCommentRead
+                    {
+                        CommentId = comment.Id,
+                        StudentId = viewerStudentId.Value,
+                        ReadAt = DateTime.UtcNow
+                    });
+                }
+
+                if (unreadComments.Count > 0)
+                    await _db.SaveChangesAsync(ct);
+
+                return task.Comments.OrderBy(c => c.CreatedAt).Select(c => c.ToDto(viewerStudentId.Value)).ToList();
+            }
+
             return task.Comments.OrderBy(c => c.CreatedAt).Select(c => c.ToDto()).ToList();
         }
 
@@ -224,19 +250,36 @@ namespace gantt_server.Services
             if (student is null)
                 throw new InvalidOperationException("Студент не найден");
 
+            ValidateCommentPayload(dto.Content, dto.AttachmentDataUrls);
+
             var comment = new TaskComment
             {
                 TaskId = taskId,
                 StudentId = dto.StudentId,
-                Content = dto.Content,
+                Content = dto.Content?.Trim() ?? string.Empty,
                 CreatedAt = DateTime.UtcNow
             };
+
+            comment.Reads.Add(new TaskCommentRead
+            {
+                StudentId = dto.StudentId,
+                ReadAt = DateTime.UtcNow
+            });
 
             _db.TaskComments.Add(comment);
             await _db.SaveChangesAsync(ct);
 
+            var attachments = CreateAttachments(comment.Id, dto.AttachmentDataUrls);
+            if (attachments.Count > 0)
+            {
+                _db.TaskCommentAttachments.AddRange(attachments);
+                await _db.SaveChangesAsync(ct);
+            }
+
             var created = await _db.TaskComments
                 .Include(c => c.Student)
+                .Include(c => c.Attachments)
+                .Include(c => c.Reads)
                 .AsNoTracking()
                 .FirstAsync(c => c.Id == comment.Id, ct);
 
@@ -247,14 +290,47 @@ namespace gantt_server.Services
         {
             var comment = await _db.TaskComments
                 .Include(c => c.Student)
+                .Include(c => c.Attachments)
+                .Include(c => c.Reads)
                 .FirstOrDefaultAsync(c => c.Id == commentId && c.TaskId == taskId, ct);
 
             if (comment is null) return null;
 
-            comment.Content = dto.Content;
+            ValidateCommentPayload(dto.Content, dto.AttachmentDataUrls);
+            comment.Content = dto.Content?.Trim() ?? string.Empty;
+
+            if (dto.AttachmentDataUrls is not null)
+            {
+                var existingAttachments = comment.Attachments.ToList();
+                if (existingAttachments.Count > 0)
+                {
+                    _db.TaskCommentAttachments.RemoveRange(existingAttachments);
+                    await _db.SaveChangesAsync(ct);
+
+                    comment = await _db.TaskComments
+                        .Include(c => c.Student)
+                        .Include(c => c.Attachments)
+                        .Include(c => c.Reads)
+                        .FirstAsync(c => c.Id == commentId && c.TaskId == taskId, ct);
+                }
+
+                var attachments = CreateAttachments(comment.Id, dto.AttachmentDataUrls);
+                if (attachments.Count > 0)
+                {
+                    _db.TaskCommentAttachments.AddRange(attachments);
+                }
+            }
+
             await _db.SaveChangesAsync(ct);
 
-            return comment.ToDto();
+            var updated = await _db.TaskComments
+                .Include(c => c.Student)
+                .Include(c => c.Attachments)
+                .Include(c => c.Reads)
+                .AsNoTracking()
+                .FirstAsync(c => c.Id == commentId && c.TaskId == taskId, ct);
+
+            return updated.ToDto();
         }
 
         public async Task<bool> DeleteCommentAsync(Guid taskId, Guid commentId, CancellationToken ct)
@@ -370,6 +446,42 @@ namespace gantt_server.Services
                 .ToListAsync(ct);
 
             return (tasks.FirstOrDefault(t => t.Id == taskId), tasks.FirstOrDefault(t => t.Id == dependencyId));
+        }
+
+        private static void ValidateCommentPayload(string? content, IEnumerable<string>? attachmentDataUrls)
+        {
+            var hasContent = !string.IsNullOrWhiteSpace(content);
+            var hasAttachments = attachmentDataUrls?.Any(v => !string.IsNullOrWhiteSpace(v)) == true;
+
+            if (!hasContent && !hasAttachments)
+                throw new InvalidOperationException("Добавьте текст комментария или хотя бы одно фото");
+        }
+
+        private static List<TaskCommentAttachment> CreateAttachments(Guid commentId, IEnumerable<string>? attachmentDataUrls)
+        {
+            var attachments = new List<TaskCommentAttachment>();
+            if (attachmentDataUrls is null)
+                return attachments;
+
+            foreach (var imageDataUrl in attachmentDataUrls
+                .Where(v => !string.IsNullOrWhiteSpace(v))
+                .Select(v => v.Trim()))
+            {
+                if (!imageDataUrl.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException("Можно прикреплять только изображения");
+
+                if (imageDataUrl.Length > 7_000_000)
+                    throw new InvalidOperationException("Изображение слишком большое");
+
+                attachments.Add(new TaskCommentAttachment
+                {
+                    CommentId = commentId,
+                    ImageDataUrl = imageDataUrl,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
+            return attachments;
         }
     }
 }

@@ -27,6 +27,14 @@ namespace gantt_server.Mappings
             Tasks = executor.Tasks?.Select(t => t.ToDto()).ToArray() ?? Array.Empty<ProjectTaskDto>()
         };
 
+        public static ExecutorReadDto ToExecutorReadDto(this Executor executor, Guid viewerStudentId) => new()
+        {
+            Id = executor.Id,
+            TeamId = executor.TeamId,
+            TeamName = executor.Team?.Name ?? string.Empty,
+            Tasks = executor.Tasks?.Select(t => t.ToDto(viewerStudentId)).ToArray() ?? Array.Empty<ProjectTaskDto>()
+        };
+
         public static Student ToEntity(this StudentCreateDto dto, string normalizedEmail) => new()
         {
             Id = Guid.NewGuid(),
@@ -43,8 +51,8 @@ namespace gantt_server.Mappings
             new()
             {
                 // StudentId = studentId,
-                Teams = teams.ToReadDtos().ToArray(),
-                Tasks = tasks.Select(t => t.ToDto()).ToArray()
+                Teams = teams.Select(t => t.ToReadDto(studentId)).ToArray(),
+                Tasks = tasks.Select(t => t.ToDto(studentId)).ToArray()
             };
 
         public static void Apply(this Student entity, StudentPatchDto dto)

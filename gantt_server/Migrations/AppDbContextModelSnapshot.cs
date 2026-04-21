@@ -80,6 +80,46 @@ namespace gantt_server.Migrations
                     b.ToTable("Executors", (string)null);
                 });
 
+            modelBuilder.Entity("gantt_server.Models.PendingRegistration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("VerificationToken")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("VerificationTokenExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("PendingRegistrations", (string)null);
+                });
+
             modelBuilder.Entity("gantt_server.Models.Project", b =>
                 {
                     b.Property<Guid>("Id")
@@ -169,6 +209,15 @@ namespace gantt_server.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("EmailVerificationToken")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("EmailVerificationTokenExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -215,6 +264,47 @@ namespace gantt_server.Migrations
                     b.HasIndex("TaskId");
 
                     b.ToTable("TaskComments", (string)null);
+                });
+
+            modelBuilder.Entity("gantt_server.Models.TaskCommentAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CommentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ImageDataUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CommentId");
+
+                    b.ToTable("TaskCommentAttachments", (string)null);
+                });
+
+            modelBuilder.Entity("gantt_server.Models.TaskCommentRead", b =>
+                {
+                    b.Property<Guid>("CommentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("CommentId", "StudentId");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("TaskCommentReads", (string)null);
                 });
 
             modelBuilder.Entity("gantt_server.Models.Team", b =>
@@ -332,6 +422,36 @@ namespace gantt_server.Migrations
                     b.Navigation("Task");
                 });
 
+            modelBuilder.Entity("gantt_server.Models.TaskCommentAttachment", b =>
+                {
+                    b.HasOne("gantt_server.Models.TaskComment", "Comment")
+                        .WithMany("Attachments")
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Comment");
+                });
+
+            modelBuilder.Entity("gantt_server.Models.TaskCommentRead", b =>
+                {
+                    b.HasOne("gantt_server.Models.TaskComment", "Comment")
+                        .WithMany("Reads")
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("gantt_server.Models.Student", "Student")
+                        .WithMany("ReadTaskComments")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Comment");
+
+                    b.Navigation("Student");
+                });
+
             modelBuilder.Entity("gantt_server.Models.Project", b =>
                 {
                     b.Navigation("Tasks");
@@ -347,6 +467,15 @@ namespace gantt_server.Migrations
             modelBuilder.Entity("gantt_server.Models.Student", b =>
                 {
                     b.Navigation("Executors");
+
+                    b.Navigation("ReadTaskComments");
+                });
+
+            modelBuilder.Entity("gantt_server.Models.TaskComment", b =>
+                {
+                    b.Navigation("Attachments");
+
+                    b.Navigation("Reads");
                 });
 
             modelBuilder.Entity("gantt_server.Models.Team", b =>
