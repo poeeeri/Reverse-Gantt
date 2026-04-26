@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { getTaskSolution, saveTaskSolution } from '../../api/task';
 import './TaskSolutionModal.css';
 
@@ -57,10 +57,158 @@ const normalizeSolution = (solution) => {
     };
 };
 
+const renderInlineMarkdown = (text) => {
+    const parts = [];
+    const pattern = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\((https?:\/\/[^)\s]+)\)|\*[^*]+\*)/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = pattern.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+            parts.push(text.slice(lastIndex, match.index));
+        }
+
+        const token = match[0];
+        const key = `${match.index}-${token}`;
+
+        if (token.startsWith('**')) {
+            parts.push(<strong key={key}>{token.slice(2, -2)}</strong>);
+        } else if (token.startsWith('`')) {
+            parts.push(<code key={key}>{token.slice(1, -1)}</code>);
+        } else if (token.startsWith('[')) {
+            const labelEnd = token.indexOf(']');
+            const label = token.slice(1, labelEnd);
+            const href = token.slice(labelEnd + 2, -1);
+            parts.push(
+                <a key={key} href={href} target="_blank" rel="noreferrer">
+                    {label}
+                </a>
+            );
+        } else if (token.startsWith('*')) {
+            parts.push(<em key={key}>{token.slice(1, -1)}</em>);
+        }
+
+        lastIndex = pattern.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+        parts.push(text.slice(lastIndex));
+    }
+
+    return parts;
+};
+
+const renderMarkdown = (value) => {
+    const lines = String(value || '').replace(/\r\n/g, '\n').split('\n');
+    const blocks = [];
+    let index = 0;
+
+    const readList = (ordered) => {
+        const items = [];
+        const matcher = ordered ? /^\d+\.\s+(.+)$/ : /^[-*]\s+(.+)$/;
+
+        while (index < lines.length) {
+            const match = lines[index].match(matcher);
+            if (!match) break;
+            items.push(match[1]);
+            index += 1;
+        }
+
+        const Tag = ordered ? 'ol' : 'ul';
+        return (
+            <Tag key={`list-${index}-${items.length}`}>
+                {items.map((item, itemIndex) => (
+                    <li key={`${itemIndex}-${item}`}>{renderInlineMarkdown(item)}</li>
+                ))}
+            </Tag>
+        );
+    };
+
+    while (index < lines.length) {
+        const line = lines[index];
+
+        if (!line.trim()) {
+            index += 1;
+            continue;
+        }
+
+        if (line.startsWith('```')) {
+            const code = [];
+            index += 1;
+
+            while (index < lines.length && !lines[index].startsWith('```')) {
+                code.push(lines[index]);
+                index += 1;
+            }
+
+            if (index < lines.length) index += 1;
+            blocks.push(<pre key={`code-${index}`}><code>{code.join('\n')}</code></pre>);
+            continue;
+        }
+
+        const heading = line.match(/^(#{1,3})\s+(.+)$/);
+        if (heading) {
+            const level = heading[1].length;
+            const Tag = `h${level + 3}`;
+            blocks.push(<Tag key={`heading-${index}`}>{renderInlineMarkdown(heading[2])}</Tag>);
+            index += 1;
+            continue;
+        }
+
+        if (/^[-*]\s+/.test(line)) {
+            blocks.push(readList(false));
+            continue;
+        }
+
+        if (/^\d+\.\s+/.test(line)) {
+            blocks.push(readList(true));
+            continue;
+        }
+
+        if (line.startsWith('> ')) {
+            const quote = [];
+
+            while (index < lines.length && lines[index].startsWith('> ')) {
+                quote.push(lines[index].slice(2));
+                index += 1;
+            }
+
+            blocks.push(
+                <blockquote key={`quote-${index}`}>
+                    {quote.map((item, itemIndex) => (
+                        <p key={`${itemIndex}-${item}`}>{renderInlineMarkdown(item)}</p>
+                    ))}
+                </blockquote>
+            );
+            continue;
+        }
+
+        const paragraph = [line];
+        index += 1;
+
+        while (
+            index < lines.length &&
+            lines[index].trim() &&
+            !lines[index].startsWith('```') &&
+            !/^(#{1,3})\s+/.test(lines[index]) &&
+            !/^[-*]\s+/.test(lines[index]) &&
+            !/^\d+\.\s+/.test(lines[index]) &&
+            !lines[index].startsWith('> ')
+        ) {
+            paragraph.push(lines[index]);
+            index += 1;
+        }
+
+        blocks.push(<p key={`paragraph-${index}`}>{renderInlineMarkdown(paragraph.join(' '))}</p>);
+    }
+
+    return blocks;
+};
+
 const TaskSolutionModal = ({ task, actorExecutorId, canEdit, onClose, onSaved }) => {
     const taskId = task?.Id || task?.id;
     const taskName = task?.Name || task?.name || '';
-    const inlineSolution = normalizeSolution(task?.Solution || task?.solution);
+    const inlineSolution = useMemo(() => normalizeSolution(task?.Solution || task?.solution), [task]);
     const [solution, setSolution] = useState(inlineSolution);
     const [explanation, setExplanation] = useState(inlineSolution?.explanation || '');
     const [attachments, setAttachments] = useState(inlineSolution?.attachments || []);
@@ -68,6 +216,7 @@ const TaskSolutionModal = ({ task, actorExecutorId, canEdit, onClose, onSaved })
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [selectedImage, setSelectedImage] = useState(null);
+    const [mode, setMode] = useState(inlineSolution ? 'preview' : 'edit');
 
     useEffect(() => {
         if (!taskId || inlineSolution) return;
@@ -81,6 +230,7 @@ const TaskSolutionModal = ({ task, actorExecutorId, canEdit, onClose, onSaved })
                 setSolution(normalized);
                 setExplanation(normalized?.explanation || '');
                 setAttachments(normalized?.attachments || []);
+                setMode(normalized ? 'preview' : 'edit');
             })
             .catch((err) => {
                 if (!String(err.message || '').includes('404')) {
@@ -89,9 +239,10 @@ const TaskSolutionModal = ({ task, actorExecutorId, canEdit, onClose, onSaved })
                 setSolution(null);
                 setExplanation('');
                 setAttachments([]);
+                setMode('edit');
             })
             .finally(() => setLoading(false));
-    }, [taskId]);
+    }, [taskId, inlineSolution]);
 
     const appendAttachments = async (fileList) => {
         const files = Array.from(fileList || []);
@@ -140,6 +291,7 @@ const TaskSolutionModal = ({ task, actorExecutorId, canEdit, onClose, onSaved })
             setSolution(normalized);
             setExplanation(normalized?.explanation || '');
             setAttachments(normalized?.attachments || []);
+            setMode('preview');
             onSaved?.(normalized);
         } catch (err) {
             setError(err.message || 'Не удалось сохранить решение');
@@ -147,6 +299,13 @@ const TaskSolutionModal = ({ task, actorExecutorId, canEdit, onClose, onSaved })
             setSaving(false);
         }
     };
+
+    const hasDraft = explanation.trim() || attachments.length > 0;
+    const canPreviewDraft = canEdit && hasDraft;
+    const previewExplanation = canPreviewDraft ? explanation : solution?.explanation || '';
+    const previewAttachments = canPreviewDraft ? attachments : solution?.attachments || [];
+    const showPreview = mode === 'preview' && (solution || canPreviewDraft);
+    const showEditor = canEdit && mode === 'edit';
 
     return (
         <>
@@ -165,6 +324,26 @@ const TaskSolutionModal = ({ task, actorExecutorId, canEdit, onClose, onSaved })
                         )}
                     </div>
 
+                    {canEdit && (
+                        <div className="solution-tabs" role="tablist" aria-label="Режим решения">
+                            <button
+                                type="button"
+                                className={mode === 'preview' ? 'active' : ''}
+                                onClick={() => setMode('preview')}
+                                disabled={!solution && !hasDraft}
+                            >
+                                Просмотр
+                            </button>
+                            <button
+                                type="button"
+                                className={mode === 'edit' ? 'active' : ''}
+                                onClick={() => setMode('edit')}
+                            >
+                                Редактирование
+                            </button>
+                        </div>
+                    )}
+
                     {error && <div className="solution-error">{error}</div>}
                     {loading && <div className="solution-empty">Загружаем решение...</div>}
 
@@ -172,13 +351,41 @@ const TaskSolutionModal = ({ task, actorExecutorId, canEdit, onClose, onSaved })
                         <div className="solution-empty">Решение пока не прикреплено.</div>
                     )}
 
-                    {!loading && canEdit ? (
+                    {!loading && showPreview && (
+                        <div className="solution-view">
+                            <div className="solution-preview-card">
+                                {previewExplanation ? (
+                                    <div className="solution-markdown">
+                                        {renderMarkdown(previewExplanation)}
+                                    </div>
+                                ) : (
+                                    <div className="solution-empty compact">Пояснение не добавлено.</div>
+                                )}
+                            </div>
+
+                            {previewAttachments.length > 0 && (
+                                <div className="solution-gallery">
+                                    {previewAttachments.map((attachment, index) => (
+                                        <button
+                                            key={attachment.id || `${attachment.imageDataUrl.slice(0, 24)}-${index}`}
+                                            type="button"
+                                            onClick={() => setSelectedImage(attachment.imageDataUrl)}
+                                        >
+                                            <img src={attachment.imageDataUrl} alt="Вложение решения" />
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {!loading && showEditor && (
                         <div className="solution-editor">
                             <textarea
                                 value={explanation}
                                 onChange={(event) => setExplanation(event.target.value)}
-                                placeholder="Опишите, что сделано, где смотреть результат и что важно проверить."
-                                rows="7"
+                                placeholder="Опишите, что сделано, где смотреть результат и что важно проверить. Можно использовать Markdown: # заголовки, списки, **жирный текст**, `код`, ссылки."
+                                rows="9"
                             />
 
                             <div className="solution-toolbar">
@@ -198,7 +405,7 @@ const TaskSolutionModal = ({ task, actorExecutorId, canEdit, onClose, onSaved })
                             </div>
 
                             {attachments.length > 0 && (
-                                <div className="solution-gallery">
+                                <div className="solution-gallery editable">
                                     {attachments.map((attachment, index) => (
                                         <div key={attachment.id || `${attachment.imageDataUrl.slice(0, 24)}-${index}`} className="solution-gallery-item">
                                             <button type="button" onClick={() => setSelectedImage(attachment.imageDataUrl)}>
@@ -216,22 +423,18 @@ const TaskSolutionModal = ({ task, actorExecutorId, canEdit, onClose, onSaved })
                                 <button type="button" onClick={handleSave} disabled={saving}>
                                     {saving ? 'Сохраняем...' : 'Сохранить решение'}
                                 </button>
+                                {hasDraft && (
+                                    <button type="button" className="solution-secondary" onClick={() => setMode('preview')}>
+                                        Предпросмотр
+                                    </button>
+                                )}
                             </div>
                         </div>
-                    ) : !loading && solution ? (
-                        <div className="solution-view">
-                            {solution.explanation && <p>{solution.explanation}</p>}
-                            {solution.attachments.length > 0 && (
-                                <div className="solution-gallery">
-                                    {solution.attachments.map((attachment) => (
-                                        <button key={attachment.id} type="button" onClick={() => setSelectedImage(attachment.imageDataUrl)}>
-                                            <img src={attachment.imageDataUrl} alt="Вложение решения" />
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    ) : null}
+                    )}
+
+                    {!loading && canEdit && !showPreview && !showEditor && (
+                        <div className="solution-empty">Добавьте решение во вкладке редактирования.</div>
+                    )}
                 </div>
             </div>
 
