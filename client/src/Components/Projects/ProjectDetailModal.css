@@ -151,6 +151,23 @@
     gap: 10px;
 }
 
+.project-task-search {
+    flex: 1 1 220px;
+    max-width: 320px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #ffc9d7;
+    background: #fff0f5;
+    color: #7f1230;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.project-task-search:focus {
+    border-color: #cc1d49;
+    box-shadow: 0 0 0 3px rgba(204, 29, 73, 0.12);
+}
+
 .task-item {
     background: #ffdfe8;
     padding: 12px 15px;
@@ -188,6 +205,23 @@
     align-items: center;
     margin-bottom: 8px;
     position: relative;
+}
+
+.project-task-toggle {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    border-radius: 6px;
+    border: 1px solid #ffc9d7;
+    background: #ffe9ef;
+    color: #a3163a;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.project-task-toggle:hover {
+    background: #ffc9d7;
 }
 
 .task-menu-btn {

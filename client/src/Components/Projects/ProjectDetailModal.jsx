@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { apiFetch } from '../../api/http';
 import { deleteTask } from '../../api/task';
 import TaskCreator from '../Tasks/TaskCreator';
+import TaskSolutionModal from '../Tasks/TaskSolutionModal';
 import ReverseGanttChart from '../Gantt/ReverseGanttChart';
 import GanttTaskReactWrapper from '../Gantt/GanttTaskReactWrapper';
 import './ProjectDetailModal.css';
@@ -21,6 +22,9 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
     const [loadingDetails, setLoadingDetails] = useState(false);
     const [openTaskMenu, setOpenTaskMenu] = useState(null);
     const [highlightedTaskId, setHighlightedTaskId] = useState(null);
+    const [collapsedTaskIds, setCollapsedTaskIds] = useState(new Set());
+    const [taskSearchQuery, setTaskSearchQuery] = useState('');
+    const [solutionTask, setSolutionTask] = useState(null);
 
     useEffect(() => {
         if (project && isOpen) {
@@ -106,6 +110,11 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
         return !!task;
     };
 
+    const getCurrentLeaderExecutorId = () => {
+        const executor = team?.Executors?.find((item) => item.StudentId === user?.id && item.Role === 1);
+        return executor?.Id || null;
+    };
+
     const openEditTask = (task) => {
         setEditTask(task);
         setSelectedExecutors(task.Executors?.map((e) => e.Id) || []);
@@ -180,6 +189,8 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
         }
     };
 
+    const normalizeSearch = (value) => String(value || '').trim().toLowerCase();
+
     const ganttTasks = useMemo(() => {
         const mainTasks = tasks.filter(t => !t.ParentTaskId);
         return mainTasks.map(task => ({
@@ -193,7 +204,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
 
     const taskIndex = useMemo(() => new Map(tasks.map(task => [task.Id, task])), [tasks]);
 
-    const orderedTasks = useMemo(() => {
+    const childrenByParent = useMemo(() => {
         const childrenByParent = new Map();
 
         tasks.forEach((task) => {
@@ -213,8 +224,33 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
             });
         });
 
+        return childrenByParent;
+    }, [tasks]);
+
+    useEffect(() => {
+        setCollapsedTaskIds((prev) => {
+            const next = new Set(prev);
+            childrenByParent.forEach((items, parentId) => {
+                if (parentId && items.length > 0) {
+                    next.add(parentId);
+                }
+            });
+            return next;
+        });
+    }, [childrenByParent]);
+
+    const orderedTasks = useMemo(() => {
         const result = [];
         const visited = new Set();
+        const query = normalizeSearch(taskSearchQuery);
+        const searchMatches = (task) => {
+            if (!query) return true;
+            return [
+                task.Name,
+                task.Description,
+                getTaskStatusText(task.Status)
+            ].some((value) => normalizeSearch(value).includes(query));
+        };
 
         const walk = (parentId, level) => {
             const branch = childrenByParent.get(parentId) || [];
@@ -223,22 +259,36 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                     return;
                 }
 
-                visited.add(task.Id);
-                result.push({ ...task, __level: level });
-                walk(task.Id, level + 1);
+                const childStart = result.length;
+                const isCollapsed = !query && collapsedTaskIds.has(task.Id);
+
+                if (!isCollapsed) {
+                    walk(task.Id, level + 1);
+                }
+
+                const childMatched = result.length > childStart;
+                const isMatch = searchMatches(task);
+
+                if (isMatch || childMatched) {
+                    visited.add(task.Id);
+                    result.splice(childStart, 0, { ...task, __level: level });
+                } else {
+                    result.splice(childStart);
+                    visited.add(task.Id);
+                }
             });
         };
 
         walk(null, 0);
 
         tasks.forEach((task) => {
-            if (!visited.has(task.Id)) {
+            if (!visited.has(task.Id) && (!task.ParentTaskId || !taskIndex.has(task.ParentTaskId))) {
                 result.push({ ...task, __level: 0 });
             }
         });
 
         return result;
-    }, [tasks]);
+    }, [childrenByParent, collapsedTaskIds, taskIndex, taskSearchQuery, tasks]);
 
     const resolveLinkedTasks = (task, taskRefsKey, taskIdsKey) => {
         const references = Array.isArray(task?.[taskRefsKey]) ? task[taskRefsKey] : [];
@@ -268,6 +318,17 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
             return;
         }
 
+        setCollapsedTaskIds((prev) => {
+            const next = new Set(prev);
+            let cursor = taskIndex.get(taskId);
+
+            while (cursor?.ParentTaskId) {
+                next.delete(cursor.ParentTaskId);
+                cursor = taskIndex.get(cursor.ParentTaskId);
+            }
+
+            return next;
+        });
         setHighlightedTaskId(taskId);
         setOpenTaskMenu(null);
 
@@ -275,6 +336,25 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
             const element = document.getElementById(`project-task-${taskId}`);
             element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
+    };
+
+    const toggleTaskCollapse = (taskId) => {
+        setCollapsedTaskIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(taskId)) {
+                next.delete(taskId);
+            } else {
+                next.add(taskId);
+            }
+            return next;
+        });
+    };
+
+    const handleSolutionSaved = (taskId, solution) => {
+        setTasks((prev) => prev.map((task) => (
+            task.Id === taskId ? { ...task, Solution: solution } : task
+        )));
+        setSolutionTask((prev) => (prev?.Id === taskId ? { ...prev, Solution: solution } : prev));
     };
 
     if (!isOpen || !project) return null;
@@ -397,8 +477,15 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                     </div>
 
                     <div className="detail-section">
-                        <div className="tasks-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                        <div className="tasks-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '15px', flexWrap: 'wrap' }}>
                             <h3>Задачи проекта ({tasks.length})</h3>
+                            <input
+                                className="project-task-search"
+                                type="search"
+                                value={taskSearchQuery}
+                                onChange={(event) => setTaskSearchQuery(event.target.value)}
+                                placeholder="Поиск задач"
+                            />
                             {team && isUserLeader() && (
                                 <button
                                     className="open-task-modal-btn"
@@ -419,12 +506,14 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                             )}
                         </div>
                         <div className="tasks-list">
-                            {tasks.length > 0 ? (
+                            {tasks.length > 0 && orderedTasks.length > 0 ? (
                                 orderedTasks.map(task => {
                                     const dependencyTasks = resolveLinkedTasks(task, 'DependencyTasks', 'DependencyIds');
                                     const dependentTasks = resolveLinkedTasks(task, 'DependentTasks', 'DependentIds');
                                     const parentTask = task.ParentTaskId ? taskIndex.get(task.ParentTaskId) : null;
                                     const subtaskCount = Array.isArray(task.SubtaskIds) ? task.SubtaskIds.length : 0;
+                                    const hasChildren = (childrenByParent.get(task.Id) || []).length > 0;
+                                    const isCollapsed = !taskSearchQuery.trim() && collapsedTaskIds.has(task.Id);
 
                                     return (
                                     <div
@@ -435,6 +524,16 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                                     >
                                         <div className="task-header">
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                                                {hasChildren && (
+                                                    <button
+                                                        type="button"
+                                                        className={`project-task-toggle ${isCollapsed ? 'collapsed' : 'expanded'}`}
+                                                        onClick={() => toggleTaskCollapse(task.Id)}
+                                                        aria-label={isCollapsed ? 'Показать подзадачи' : 'Скрыть подзадачи'}
+                                                    >
+                                                        {isCollapsed ? '▸' : '▾'}
+                                                    </button>
+                                                )}
                                                 <span className="task-name">{task.Name}</span>
                                                 <span className={`task-status ${getTaskStatusClass(task.Status)}`}>{getTaskStatusText(task.Status)}</span>
                                             </div>
@@ -520,6 +619,13 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                                                     Зависимостей: {dependencyTasks.length}
                                                 </span>
                                             )}
+                                            <button
+                                                className="task-subtask-btn"
+                                                type="button"
+                                                onClick={() => setSolutionTask(task)}
+                                            >
+                                                {task.Solution ? 'Решение' : 'Добавить решение'}
+                                            </button>
                                         </div>
                                         {task.Description && (
                                             <p className="task-description">{task.Description}</p>
@@ -576,6 +682,8 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                                     </div>
                                     );
                                 })
+                            ) : tasks.length > 0 ? (
+                                <p className="no-tasks">По выбранному поиску задач нет</p>
                             ) : (
                                 <p className="no-tasks">Нет задач</p>
                             )}
@@ -766,6 +874,16 @@ const ProjectDetailModal = ({ project, isOpen, onClose, onUpdate, user }) => {
                     </div>
                 </div>
             </div>
+        )}
+
+        {solutionTask && (
+            <TaskSolutionModal
+                task={solutionTask}
+                actorExecutorId={getCurrentLeaderExecutorId()}
+                canEdit={Boolean(getCurrentLeaderExecutorId())}
+                onClose={() => setSolutionTask(null)}
+                onSaved={(solution) => handleSolutionSaved(solutionTask.Id, solution)}
+            />
         )}
         </>
     );

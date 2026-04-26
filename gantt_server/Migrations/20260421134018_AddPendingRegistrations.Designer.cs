@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using gantt_server.Data;
@@ -11,9 +12,11 @@ using gantt_server.Data;
 namespace gantt_server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260421134018_AddPendingRegistrations")]
+    partial class AddPendingRegistrations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -307,61 +310,6 @@ namespace gantt_server.Migrations
                     b.ToTable("TaskCommentReads", (string)null);
                 });
 
-            modelBuilder.Entity("gantt_server.Models.TaskSolution", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Explanation")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("TaskId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UpdatedByExecutorId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TaskId")
-                        .IsUnique();
-
-                    b.HasIndex("UpdatedByExecutorId");
-
-                    b.ToTable("TaskSolutions", (string)null);
-                });
-
-            modelBuilder.Entity("gantt_server.Models.TaskSolutionAttachment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ImageDataUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("SolutionId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SolutionId");
-
-                    b.ToTable("TaskSolutionAttachments", (string)null);
-                });
-
             modelBuilder.Entity("gantt_server.Models.Team", b =>
                 {
                     b.Property<Guid>("Id")
@@ -507,36 +455,6 @@ namespace gantt_server.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("gantt_server.Models.TaskSolution", b =>
-                {
-                    b.HasOne("gantt_server.Models.ProjectTask", "Task")
-                        .WithOne("Solution")
-                        .HasForeignKey("gantt_server.Models.TaskSolution", "TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("gantt_server.Models.Executor", "UpdatedByExecutor")
-                        .WithMany()
-                        .HasForeignKey("UpdatedByExecutorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Task");
-
-                    b.Navigation("UpdatedByExecutor");
-                });
-
-            modelBuilder.Entity("gantt_server.Models.TaskSolutionAttachment", b =>
-                {
-                    b.HasOne("gantt_server.Models.TaskSolution", "Solution")
-                        .WithMany("Attachments")
-                        .HasForeignKey("SolutionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Solution");
-                });
-
             modelBuilder.Entity("gantt_server.Models.Project", b =>
                 {
                     b.Navigation("Tasks");
@@ -545,8 +463,6 @@ namespace gantt_server.Migrations
             modelBuilder.Entity("gantt_server.Models.ProjectTask", b =>
                 {
                     b.Navigation("Comments");
-
-                    b.Navigation("Solution");
 
                     b.Navigation("Subtasks");
                 });
@@ -563,11 +479,6 @@ namespace gantt_server.Migrations
                     b.Navigation("Attachments");
 
                     b.Navigation("Reads");
-                });
-
-            modelBuilder.Entity("gantt_server.Models.TaskSolution", b =>
-                {
-                    b.Navigation("Attachments");
                 });
 
             modelBuilder.Entity("gantt_server.Models.Team", b =>
