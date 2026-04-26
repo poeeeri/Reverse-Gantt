@@ -7,8 +7,10 @@ namespace gantt_server.Dtos.ProjectTaskDtos
         [Required]
         public Guid StudentId { get; set; }
 
-        [Required]
         [MaxLength(2000)]
-        public string Content { get; set; } = string.Empty;
+        public string? Content { get; set; }
+
+        [MaxLength(6)]
+        public IList<string>? AttachmentDataUrls { get; set; }
     }
 }

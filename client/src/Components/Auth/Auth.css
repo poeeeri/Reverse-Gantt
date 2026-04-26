@@ -114,3 +114,36 @@ h1 {
     text-align: center;
     font-weight: 500;
 }
+
+.success-message {
+    color: #1b5e38;
+    background: #e6fbef;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #b7f2cf;
+    margin: 10px 0;
+    text-align: center;
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.success-message a {
+    color: #1b5e38;
+}
+
+.auth-secondary-button {
+    border-radius: 10px;
+    border: 1px solid #ffc9d7;
+    padding: 12px;
+    font-size: 0.95em;
+    font-weight: 600;
+    font-family: inherit;
+    background: #ffe9ef;
+    color: #cc1d49;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.auth-secondary-button:hover {
+    background: #ffd7e1;
+}

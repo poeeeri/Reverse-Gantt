@@ -16,6 +16,7 @@ namespace gantt_server.Mappings
                 FirstName = dto.Name,
                 LastName = dto.LastName,
                 Email = email,
+                EmailConfirmed = false,
                 CreatedAt = DateTime.UtcNow
             };
         }
@@ -25,7 +26,8 @@ namespace gantt_server.Mappings
             Id = student.Id,
             Email = student.Email,
             FirstName = student.FirstName,
-            LastName = student.LastName
+            LastName = student.LastName,
+            EmailConfirmed = student.EmailConfirmed
         };
     }
 }

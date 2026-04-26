@@ -1,0 +1,11 @@
+node_modules/
+client/node_modules/
+client/dist/
+dist/
+.tmp/
+*.log
+.env
+.env.*
+appsettings.Development.json
+bin/
+obj/

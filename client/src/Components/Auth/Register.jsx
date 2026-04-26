@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { register } from '../../api/auth';
 import './Auth.css';
 
-const Register = ({ onToggleForm, onAuth }) => {
+const Register = ({ onToggleForm }) => {
     const [formData, setFormData] = useState({
         name: '',
         lastName: '',
@@ -12,46 +12,48 @@ const Register = ({ onToggleForm, onAuth }) => {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
 
-    const handleChange = (e) => {
+    const handleChange = (event) => {
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value
+            [event.target.name]: event.target.value
         });
     };
 
-const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    
-    if (formData.password.length < 8) {
-        setError('Пароль должен содержать минимум 8 символов');
-        return;
-    }
-    
-    if (formData.password !== formData.confirmPassword) {
-        setError('Пароли не совпадают!');
-        return;
-    }
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        setError('');
+        setSuccess('');
 
-    setLoading(true);
-    try {
-        const data = await register(formData);
-        const student = data.student ?? data.Student;
-        const token = data.token ?? data.Token;
-
-        localStorage.setItem('token', token);
-        onAuth({ student, token });
-    } catch (err) {
-        if (err.errors && Array.isArray(err.errors)) {
-            setError(err.errors.join(', '));
-        } else {
-            setError(err.message || 'Ошибка регистрации');
+        if (formData.password.length < 8) {
+            setError('Пароль должен содержать минимум 8 символов');
+            return;
         }
-    } finally {
-        setLoading(false);
-    }
-};
+
+        if (formData.password !== formData.confirmPassword) {
+            setError('Пароли не совпадают');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const data = await register(formData);
+            setSuccess(
+                data.message ||
+                data.Message ||
+                'Заявка создана. Дождитесь подтверждения администратора.'
+            );
+        } catch (err) {
+            if (err.errors && Array.isArray(err.errors)) {
+                setError(err.errors.join(', '));
+            } else {
+                setError(err.message || 'Ошибка регистрации');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="auth-container">
@@ -114,8 +116,9 @@ const handleSubmit = async (e) => {
                         />
                     </div>
                     {error && <p className="error">{error}</p>}
+                    {success && <p className="success-message">{success}</p>}
                     <button type="submit" className="auth-button" disabled={loading}>
-                        {loading ? 'Регистрация...' : 'Зарегистрироваться'}
+                        {loading ? 'Создаём заявку...' : 'Отправить заявку'}
                     </button>
                 </form>
                 <p className="auth-toggle">

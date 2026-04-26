@@ -17,51 +17,136 @@ public sealed class AuthService : IAuthService
     private readonly AppDbContext _db;
     private readonly IPasswordHasher<Student> _hasher;
     private readonly JwtOptions _jwt;
+    private readonly EmailOptions _emailOptions;
+    private readonly IEmailService _emailService;
+    private readonly IPendingRegistrationService _pendingRegistrations;
+    private readonly ITelegramApprovalService _telegramApprovalService;
 
-    public AuthService(AppDbContext db, IOptions<JwtOptions> jwt)
+    public AuthService(
+        AppDbContext db,
+        IOptions<JwtOptions> jwt,
+        IOptions<EmailOptions> emailOptions,
+        IEmailService emailService,
+        IPendingRegistrationService pendingRegistrations,
+        ITelegramApprovalService telegramApprovalService)
     {
         _db = db;
         _hasher = new PasswordHasher<Student>();
         _jwt = jwt.Value;
+        _emailOptions = emailOptions.Value;
+        _emailService = emailService;
+        _pendingRegistrations = pendingRegistrations;
+        _telegramApprovalService = telegramApprovalService;
     }
 
     public async Task<AuthResponseDto> RegisterAsync(AuthRegisterDto dto, CancellationToken ct)
     {
-        var student = dto.ToStudent();
-        var email = student.Email;
+        await _pendingRegistrations.CleanupExpiredAsync(ct);
+        var pending = await _pendingRegistrations.CreateOrUpdateAsync(dto, ct);
 
-        if (await _db.Students.AnyAsync(s => s.Email == email, ct))
-            throw new InvalidOperationException("Студент уже существует");
+        if (_telegramApprovalService.IsEnabled)
+        {
+            await _telegramApprovalService.SendPendingRegistrationAsync(pending, ct);
+            return new AuthResponseDto
+            {
+                RequiresEmailConfirmation = false,
+                Message = "Заявка отправлена администратору на подтверждение."
+            };
+        }
 
-        student.PasswordHash = _hasher.HashPassword(student, dto.Password);
+        var verificationLink = BuildConfirmationLink(pending);
+        await _emailService.SendEmailConfirmationAsync(
+            pending.Email,
+            $"{pending.FirstName} {pending.LastName}".Trim(),
+            verificationLink,
+            ct);
 
-        _db.Students.Add(student);
-        await _db.SaveChangesAsync(ct);
-
-        var token = CreateToken(student);
         return new AuthResponseDto
         {
-            Token = token,
-            Student = student.ToAuthStudentDto()
+            RequiresEmailConfirmation = true,
+            Message = "Проверьте почту и подтвердите регистрацию. До подтверждения аккаунт не будет создан."
         };
     }
 
     public async Task<AuthResponseDto> LoginAsync(AuthLoginDto dto, CancellationToken ct)
     {
         var email = StudentMappings.NormalizeEmail(dto.Email);
-        var student = await _db.Students.FirstOrDefaultAsync(s => s.Email == email, ct)
-            ?? throw new InvalidOperationException("неправильно введены данные");
+        var student = await _db.Students.FirstOrDefaultAsync(s => s.Email == email, ct);
+
+        if (student is null)
+        {
+            if (_telegramApprovalService.IsEnabled && await _pendingRegistrations.GetByEmailAsync(email, ct) is not null)
+                throw new InvalidOperationException("Заявка ещё не подтверждена администратором");
+
+            throw new InvalidOperationException("Неправильно введены данные");
+        }
 
         var result = _hasher.VerifyHashedPassword(student, student.PasswordHash, dto.Password);
         if (result == PasswordVerificationResult.Failed)
-            throw new InvalidOperationException("неправильно введены данные");
+            throw new InvalidOperationException("Неправильно введены данные");
+
+        if (!student.EmailConfirmed)
+            throw new InvalidOperationException("Сначала подтвердите почту");
 
         var token = CreateToken(student);
+
         return new AuthResponseDto
         {
             Token = token,
             Student = student.ToAuthStudentDto()
         };
+    }
+
+    public Task ConfirmEmailAsync(ConfirmEmailDto dto, CancellationToken ct) =>
+        _pendingRegistrations.ApproveAsync(dto.RegistrationId, dto.Token, ct);
+
+    public async Task<AuthResponseDto> ResendConfirmationAsync(ResendConfirmationDto dto, CancellationToken ct)
+    {
+        await _pendingRegistrations.CleanupExpiredAsync(ct);
+
+        var email = StudentMappings.NormalizeEmail(dto.Email);
+        if (await _db.Students.AnyAsync(s => s.Email == email, ct))
+        {
+            return new AuthResponseDto
+            {
+                Message = "Почта уже подтверждена."
+            };
+        }
+
+        var pending = await _pendingRegistrations.RefreshConfirmationAsync(email, ct)
+            ?? throw new InvalidOperationException("Заявка уже подтверждена");
+
+        if (_telegramApprovalService.IsEnabled)
+        {
+            await _telegramApprovalService.SendPendingRegistrationAsync(pending, ct);
+            return new AuthResponseDto
+            {
+                RequiresEmailConfirmation = false,
+                Message = "Запрос повторно отправлен администратору."
+            };
+        }
+
+        var verificationLink = BuildConfirmationLink(pending);
+        await _emailService.SendEmailConfirmationAsync(
+            pending.Email,
+            $"{pending.FirstName} {pending.LastName}".Trim(),
+            verificationLink,
+            ct);
+
+        return new AuthResponseDto
+        {
+            RequiresEmailConfirmation = true,
+            Message = "Письмо с подтверждением отправлено повторно."
+        };
+    }
+
+    private string BuildConfirmationLink(PendingRegistration pending)
+    {
+        var baseUrl = string.IsNullOrWhiteSpace(_emailOptions.ConfirmationBaseUrl)
+            ? "http://localhost:5183/api/auth/confirm-email"
+            : _emailOptions.ConfirmationBaseUrl.TrimEnd('/');
+
+        return $"{baseUrl}?registrationId={pending.Id}&token={Uri.EscapeDataString(pending.VerificationToken)}";
     }
 
     private string CreateToken(Student student)
