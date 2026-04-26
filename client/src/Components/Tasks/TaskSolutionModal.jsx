@@ -4,6 +4,25 @@ import './TaskSolutionModal.css';
 
 const MAX_ATTACHMENTS = 6;
 
+const solutionTemplates = [
+    {
+        label: 'Что сделано',
+        text: '## Что сделано\n- '
+    },
+    {
+        label: 'Как проверить',
+        text: '## Как проверить\n1. \n2. '
+    },
+    {
+        label: 'Ссылки',
+        text: '## Ссылки\n- [Название](https://)'
+    },
+    {
+        label: 'Известные ограничения',
+        text: '## Известные ограничения\n- '
+    }
+];
+
 const toCamel = (value) => {
     if (Array.isArray(value)) return value.map(toCamel);
     if (!value || typeof value !== 'object') return value;
@@ -217,6 +236,7 @@ const TaskSolutionModal = ({ task, actorExecutorId, canEdit, onClose, onSaved })
     const [error, setError] = useState('');
     const [selectedImage, setSelectedImage] = useState(null);
     const [mode, setMode] = useState(inlineSolution ? 'preview' : 'edit');
+    const draftKey = taskId ? `task-solution-draft:${taskId}` : '';
 
     useEffect(() => {
         if (!taskId || inlineSolution) return;
@@ -227,8 +247,9 @@ const TaskSolutionModal = ({ task, actorExecutorId, canEdit, onClose, onSaved })
         getTaskSolution(taskId)
             .then((data) => {
                 const normalized = normalizeSolution(data);
+                const savedDraft = draftKey ? window.localStorage.getItem(draftKey) : '';
                 setSolution(normalized);
-                setExplanation(normalized?.explanation || '');
+                setExplanation(savedDraft || normalized?.explanation || '');
                 setAttachments(normalized?.attachments || []);
                 setMode(normalized ? 'preview' : 'edit');
             })
@@ -242,7 +263,36 @@ const TaskSolutionModal = ({ task, actorExecutorId, canEdit, onClose, onSaved })
                 setMode('edit');
             })
             .finally(() => setLoading(false));
-    }, [taskId, inlineSolution]);
+    }, [taskId, inlineSolution, draftKey]);
+
+    useEffect(() => {
+        if (!inlineSolution || !draftKey || !canEdit) return;
+        const savedDraft = window.localStorage.getItem(draftKey);
+        if (savedDraft) {
+            setExplanation(savedDraft);
+        }
+    }, [canEdit, draftKey, inlineSolution]);
+
+    useEffect(() => {
+        if (!draftKey || !canEdit) return;
+
+        const baseExplanation = solution?.explanation || '';
+        if (explanation.trim() && explanation !== baseExplanation) {
+            window.localStorage.setItem(draftKey, explanation);
+        } else {
+            window.localStorage.removeItem(draftKey);
+        }
+    }, [canEdit, draftKey, explanation, solution]);
+
+    const hasUnsavedDraft = canEdit && explanation !== (solution?.explanation || '');
+
+    const requestClose = () => {
+        if (hasUnsavedDraft && !window.confirm('Есть несохранённый черновик решения. Закрыть окно?')) {
+            return;
+        }
+
+        onClose();
+    };
 
     const appendAttachments = async (fileList) => {
         const files = Array.from(fileList || []);
@@ -291,6 +341,9 @@ const TaskSolutionModal = ({ task, actorExecutorId, canEdit, onClose, onSaved })
             setSolution(normalized);
             setExplanation(normalized?.explanation || '');
             setAttachments(normalized?.attachments || []);
+            if (draftKey) {
+                window.localStorage.removeItem(draftKey);
+            }
             setMode('preview');
             onSaved?.(normalized);
         } catch (err) {
@@ -309,9 +362,9 @@ const TaskSolutionModal = ({ task, actorExecutorId, canEdit, onClose, onSaved })
 
     return (
         <>
-            <div className="solution-overlay" onClick={(event) => event.target.classList.contains('solution-overlay') && onClose()}>
+            <div className="solution-overlay" onClick={(event) => event.target.classList.contains('solution-overlay') && requestClose()}>
                 <div className="solution-modal">
-                    <button className="solution-close" type="button" onClick={onClose} aria-label="Закрыть">×</button>
+                    <button className="solution-close" type="button" onClick={requestClose} aria-label="Закрыть">×</button>
 
                     <div className="solution-header">
                         <span className="solution-eyebrow">Решение задачи</span>
@@ -381,6 +434,22 @@ const TaskSolutionModal = ({ task, actorExecutorId, canEdit, onClose, onSaved })
 
                     {!loading && showEditor && (
                         <div className="solution-editor">
+                            <div className="solution-templates">
+                                {solutionTemplates.map((template) => (
+                                    <button
+                                        key={template.label}
+                                        type="button"
+                                        onClick={() => setExplanation((current) => (
+                                            current.trim()
+                                                ? `${current.trim()}\n\n${template.text}`
+                                                : template.text
+                                        ))}
+                                    >
+                                        {template.label}
+                                    </button>
+                                ))}
+                            </div>
+
                             <textarea
                                 value={explanation}
                                 onChange={(event) => setExplanation(event.target.value)}

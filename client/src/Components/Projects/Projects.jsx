@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { getMyProjects } from '../../api/project';
 import { getMyTeams } from '../../api/team';
 import CreateProjectModal from './CreateProjectModal';
@@ -15,6 +15,9 @@ const Projects = ({ user }) => {
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [selectedProject, setSelectedProject] = useState(null);
     const [detailModalOpen, setDetailModalOpen] = useState(false);
+    const [projectSearchQuery, setProjectSearchQuery] = useState('');
+    const [projectStatusFilter, setProjectStatusFilter] = useState('all');
+    const [projectTeamFilter, setProjectTeamFilter] = useState('all');
 
     const location = useLocation();
 
