@@ -16,6 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 // ---------------- JWT ----------------
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
+builder.Services.Configure<TelegramBotOptions>(builder.Configuration.GetSection("TelegramBot"));
 var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()!;
 
 builder.Services
@@ -26,7 +27,7 @@ builder.Services
         {
             ValidIssuer = jwt.Issuer,
             ValidAudience = jwt.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(jwtKeyBytes),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key)),
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateIssuerSigningKey = true,
@@ -115,10 +116,16 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IPendingRegistrationService, PendingRegistrationService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddScoped<IProjectTaskService, ProjectTaskService>();
 builder.Services.AddSingleton<ICacheService, RedisCacheService>();
+builder.Services.AddHttpClient<ITelegramApprovalService, TelegramApprovalService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(40);
+});
+builder.Services.AddHostedService<TelegramPollingWorker>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
