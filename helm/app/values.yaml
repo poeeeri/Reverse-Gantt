@@ -1,0 +1,52 @@
+appName: reverse-gantt-api
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/OWNER/REPOSITORY
+  tag: latest
+  pullPolicy: Always
+
+containerPort: 8080
+
+service:
+  type: NodePort
+  port: 80
+  nodePort: 30080
+
+healthPath: /health
+
+connectionStrings:
+  defaultConnection: ""
+
+cors:
+  origins:
+    - http://localhost:5173
+
+jwt:
+  issuer: gantt-server
+  audience: gantt-client
+  key: "CHANGE_ME_TO_A_LONG_SECRET_KEY"
+  lifetimeMinutes: "120"
+
+email:
+  smtpHost: ""
+  smtpPort: "587"
+  enableSsl: "true"
+  smtpUsername: ""
+  smtpPassword: ""
+  fromEmail: ""
+  fromName: Reverse Gantt
+  confirmationBaseUrl: ""
+
+telegramBot:
+  token: ""
+  adminChatId: ""
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi

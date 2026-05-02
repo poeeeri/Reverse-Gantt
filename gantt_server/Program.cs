@@ -208,6 +208,7 @@ using (var scope = app.Services.CreateScope())
 app.UseCors("client");
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapControllers();
 
 app.MapGet("/debug/redis", async (ICacheService cache, ILogger<Program> logger) =>
