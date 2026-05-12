@@ -3,6 +3,7 @@ name: Build and deploy to Kubernetes
 on:
   push:
     branches:
+      - sashXD
       - dev
       - qa
       - main
@@ -13,7 +14,7 @@ permissions:
   packages: write
 
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository }}
+  IMAGE_NAME: ghcr.io/poeeeri/reverse-gantt
 
 jobs:
   build:
@@ -42,7 +43,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: self-hosted
+    runs-on: [self-hosted, k8s-deployer]
 
     steps:
       - name: Checkout repository
