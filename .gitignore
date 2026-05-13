@@ -1,0 +1,28 @@
+node_modules/
+client/node_modules/
+client/dist/
+dist/
+.tmp/
+*.log
+.env
+.env.*
+appsettings.Development.json
+bin/
+obj/actions-runner/
+_work/
+.credentials
+.credentials_rsaparams
+.runner
+helm/app/secrets-*.yaml
+
+# Local GitHub Actions runner
+actions-runner/
+_work/
+.runner
+.credentials
+.credentials_rsaparams
+.service
+.path
+
+# Local secrets
+helm/app/secrets-*.yaml

@@ -39,7 +39,7 @@ const Login = ({ onToggleForm, onAuth }) => {
 
     const handleResend = async () => {
         if (!formData.email.trim()) {
-            setError('Введите email, чтобы отправить письмо повторно');
+            setError('Введите email, чтобы повторно отправить запрос');
             return;
         }
 
@@ -49,9 +49,9 @@ const Login = ({ onToggleForm, onAuth }) => {
 
         try {
             const data = await resendConfirmation(formData.email);
-            setInfo(data.message || data.Message || 'Письмо отправлено повторно');
+            setInfo(data.message || data.Message || 'Запрос отправлен повторно');
         } catch (err) {
-            setError(err.message || 'Не удалось отправить письмо повторно');
+            setError(err.message || 'Не удалось отправить запрос повторно');
         } finally {
             setResending(false);
         }
@@ -90,7 +90,7 @@ const Login = ({ onToggleForm, onAuth }) => {
                         {loading ? 'Вход...' : 'Войти'}
                     </button>
                     <button type="button" className="auth-secondary-button" disabled={resending} onClick={handleResend}>
-                        {resending ? 'Отправляем письмо...' : 'Отправить письмо повторно'}
+                        {resending ? 'Отправляем...' : 'Повторить запрос на подтверждение'}
                     </button>
                 </form>
                 <p className="auth-toggle">

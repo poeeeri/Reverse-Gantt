@@ -39,7 +39,11 @@ const Register = ({ onToggleForm }) => {
         setLoading(true);
         try {
             const data = await register(formData);
-            setSuccess(data.message || data.Message || 'Аккаунт создан. Подтвердите почту, затем войдите.');
+            setSuccess(
+                data.message ||
+                data.Message ||
+                'Заявка создана. Дождитесь подтверждения администратора.'
+            );
         } catch (err) {
             if (err.errors && Array.isArray(err.errors)) {
                 setError(err.errors.join(', '));
@@ -114,7 +118,7 @@ const Register = ({ onToggleForm }) => {
                     {error && <p className="error">{error}</p>}
                     {success && <p className="success-message">{success}</p>}
                     <button type="submit" className="auth-button" disabled={loading}>
-                        {loading ? 'Регистрируем...' : 'Зарегистрироваться'}
+                        {loading ? 'Создаём заявку...' : 'Отправить заявку'}
                     </button>
                 </form>
                 <p className="auth-toggle">
