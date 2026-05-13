@@ -59,23 +59,29 @@ builder.Services.AddControllers()
         };
     });
 
-// ---------------- Redis ----------------
+// ---------------- Cache ----------------
 var redisConn = builder.Configuration["Redis:Connection"];
 
-builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+if (string.IsNullOrWhiteSpace(redisConn))
 {
-    if (string.IsNullOrWhiteSpace(redisConn))
-        return ConnectionMultiplexer.Connect("localhost:6379,abortConnect=false");
+    builder.Services.AddMemoryCache();
+    builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
+}
+else
+{
+    builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+    {
+        var redisConfig = ConfigurationOptions.Parse(redisConn);
+        redisConfig.AbortOnConnectFail = false;
+        redisConfig.ConnectRetry = 1;
+        redisConfig.ConnectTimeout = 500;
+        redisConfig.SyncTimeout = 500;
+        redisConfig.AllowAdmin = true;
 
-    var redisConfig = ConfigurationOptions.Parse(redisConn);
-    redisConfig.AbortOnConnectFail = false;
-    redisConfig.ConnectRetry = 3;
-    redisConfig.ConnectTimeout = 5000;
-    redisConfig.SyncTimeout = 5000;
-    redisConfig.AllowAdmin = true;
-
-    return ConnectionMultiplexer.Connect(redisConfig);
-});
+        return ConnectionMultiplexer.Connect(redisConfig);
+    });
+    builder.Services.AddSingleton<ICacheService, RedisCacheService>();
+}
 
 // ---------------- Swagger ----------------
 builder.Services.AddEndpointsApiExplorer();
@@ -120,7 +126,6 @@ builder.Services.AddScoped<IPendingRegistrationService, PendingRegistrationServi
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddScoped<IProjectTaskService, ProjectTaskService>();
-builder.Services.AddSingleton<ICacheService, RedisCacheService>();
 builder.Services.AddHttpClient<ITelegramApprovalService, TelegramApprovalService>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(40);
@@ -203,6 +208,7 @@ using (var scope = app.Services.CreateScope())
 app.UseCors("client");
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapControllers();
 
 app.MapGet("/debug/redis", async (ICacheService cache, ILogger<Program> logger) =>

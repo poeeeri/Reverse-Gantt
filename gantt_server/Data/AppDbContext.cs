@@ -16,6 +16,8 @@ namespace gantt_server.Data
         public DbSet<TaskComment> TaskComments => Set<TaskComment>();
         public DbSet<TaskCommentAttachment> TaskCommentAttachments => Set<TaskCommentAttachment>();
         public DbSet<TaskCommentRead> TaskCommentReads => Set<TaskCommentRead>();
+        public DbSet<TaskSolution> TaskSolutions => Set<TaskSolution>();
+        public DbSet<TaskSolutionAttachment> TaskSolutionAttachments => Set<TaskSolutionAttachment>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -30,6 +32,7 @@ namespace gantt_server.Data
             OnModelTaskCommentsCreating(modelBuilder);
             OnModelTaskCommentAttachmentsCreating(modelBuilder);
             OnModelTaskCommentReadsCreating(modelBuilder);
+            OnModelTaskSolutionsCreating(modelBuilder);
         }
 
         private static void OnModelStudentCreating(ModelBuilder modelBuilder)
@@ -203,6 +206,43 @@ namespace gantt_server.Data
                 .WithMany(s => s.ReadTaskComments)
                 .HasForeignKey(r => r.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
+        }
+
+        private static void OnModelTaskSolutionsCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<TaskSolution>().ToTable("TaskSolutions");
+            modelBuilder.Entity<TaskSolution>().HasKey(s => s.Id);
+            modelBuilder.Entity<TaskSolution>()
+                .HasIndex(s => s.TaskId)
+                .IsUnique();
+
+            modelBuilder.Entity<TaskSolution>()
+                .HasOne(s => s.Task)
+                .WithOne(t => t.Solution)
+                .HasForeignKey<TaskSolution>(s => s.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TaskSolution>()
+                .HasOne(s => s.UpdatedByExecutor)
+                .WithMany()
+                .HasForeignKey(s => s.UpdatedByExecutorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<TaskSolution>()
+                .Property(s => s.Explanation)
+                .IsRequired();
+
+            modelBuilder.Entity<TaskSolutionAttachment>().ToTable("TaskSolutionAttachments");
+            modelBuilder.Entity<TaskSolutionAttachment>().HasKey(a => a.Id);
+            modelBuilder.Entity<TaskSolutionAttachment>()
+                .HasOne(a => a.Solution)
+                .WithMany(s => s.Attachments)
+                .HasForeignKey(a => a.SolutionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TaskSolutionAttachment>()
+                .Property(a => a.ImageDataUrl)
+                .IsRequired();
         }
     }
 }

@@ -31,6 +31,7 @@ namespace gantt_server.Mappings
             DependentTasks = task.DependentTasks.Select(t => t.ToReferenceDto()).ToArray(),
             Executors = task.Executors.Select(e => e.ToDto()).ToArray(),
             Comments = task.Comments.Select(c => c.ToDto()).ToArray(),
+            Solution = task.Solution?.ToDto(),
             UnreadCommentsCount = 0,
             AssignedAt = task.AssignedAt
         };
@@ -52,6 +53,7 @@ namespace gantt_server.Mappings
             DependentTasks = task.DependentTasks.Select(t => t.ToReferenceDto()).ToArray(),
             Executors = task.Executors.Select(e => e.ToDto()).ToArray(),
             Comments = task.Comments.Select(c => c.ToDto(viewerStudentId)).ToArray(),
+            Solution = task.Solution?.ToDto(),
             UnreadCommentsCount = task.Comments.Count(c => c.StudentId != viewerStudentId && !c.Reads.Any(r => r.StudentId == viewerStudentId)),
             AssignedAt = task.AssignedAt
         };
@@ -127,6 +129,27 @@ namespace gantt_server.Mappings
         };
 
         public static TaskCommentAttachmentDto ToDto(this TaskCommentAttachment attachment) => new()
+        {
+            Id = attachment.Id,
+            ImageDataUrl = attachment.ImageDataUrl,
+            CreatedAt = attachment.CreatedAt
+        };
+
+        public static TaskSolutionDto ToDto(this TaskSolution solution) => new()
+        {
+            Id = solution.Id,
+            TaskId = solution.TaskId,
+            Explanation = solution.Explanation,
+            UpdatedByExecutorId = solution.UpdatedByExecutorId,
+            UpdatedByName = solution.UpdatedByExecutor?.Student is null
+                ? null
+                : $"{solution.UpdatedByExecutor.Student.FirstName} {solution.UpdatedByExecutor.Student.LastName}".Trim(),
+            CreatedAt = solution.CreatedAt,
+            UpdatedAt = solution.UpdatedAt,
+            Attachments = solution.Attachments.Select(a => a.ToDto()).ToArray()
+        };
+
+        public static TaskSolutionAttachmentDto ToDto(this TaskSolutionAttachment attachment) => new()
         {
             Id = attachment.Id,
             ImageDataUrl = attachment.ImageDataUrl,

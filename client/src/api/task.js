@@ -52,3 +52,16 @@ export const deleteTask = async (taskId, actorExecutorId) => {
         method: 'DELETE'
     });
 };
+
+export const getTaskSolution = async (taskId) => {
+    return apiFetch(`/tasks/${taskId}/solution`, {
+        method: 'GET'
+    });
+};
+
+export const saveTaskSolution = async (taskId, payload) => {
+    return apiFetch(`/tasks/${taskId}/solution`, {
+        method: 'PUT',
+        body: payload
+    });
+};

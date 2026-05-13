@@ -19,5 +19,7 @@ namespace gantt_server.Services.Interfaces
         Task<TaskCommentDto?> AddCommentAsync(Guid taskId, TaskCommentCreateDto dto, CancellationToken ct);
         Task<TaskCommentDto?> UpdateCommentAsync(Guid taskId, Guid commentId, TaskCommentUpdateDto dto, CancellationToken ct);
         Task<bool> DeleteCommentAsync(Guid taskId, Guid commentId, CancellationToken ct);
+        Task<TaskSolutionDto?> GetSolutionAsync(Guid taskId, CancellationToken ct);
+        Task<TaskSolutionDto?> UpsertSolutionAsync(Guid taskId, TaskSolutionUpsertDto dto, CancellationToken ct);
     }
 }

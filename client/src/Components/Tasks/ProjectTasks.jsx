@@ -4,6 +4,7 @@ import GanttTaskReactWrapper from '../Gantt/GanttTaskReactWrapper';
 import '../Projects/ProjectDetailModal.css';
 import './ProjectTasks.css';
 import TaskComments from './TaskComments';
+import TaskSolutionModal from './TaskSolutionModal';
 
 const toCamel = (obj) => {
     if (obj === null || typeof obj !== 'object') return obj;
@@ -103,6 +104,21 @@ const uniqueById = (items) => {
     return Array.from(map.values());
 };
 
+const normalizeSearch = (value) => String(value || '').trim().toLowerCase();
+
+const collectParentIds = (nodes, result = new Set()) => {
+    nodes.forEach((node) => {
+        if (node.children?.length) {
+            result.add(node.id);
+            collectParentIds(node.children, result);
+        }
+    });
+
+    return result;
+};
+
+const countTreeNodes = (nodes) => nodes.reduce((sum, node) => sum + 1 + countTreeNodes(node.children || []), 0);
+
 const updateUnreadInTree = (items, taskId, unreadCommentsCount) => {
     return (items || []).map((item) => {
         const next = { ...item };
@@ -129,7 +145,9 @@ const ProjectTasks = ({ user }) => {
     const [assignedTasks, setAssignedTasks] = useState([]);
     const [collapsedTasks, setCollapsedTasks] = useState(new Set());
     const [statusFilter, setStatusFilter] = useState('all');
+    const [searchQuery, setSearchQuery] = useState('');
     const [activeCommentsTask, setActiveCommentsTask] = useState(null);
+    const [activeSolutionTask, setActiveSolutionTask] = useState(null);
     const [ganttModalOpen, setGanttModalOpen] = useState(false);
     const [focusedTaskId, setFocusedTaskId] = useState(null);
     const cardRefs = useRef({});
@@ -146,10 +164,37 @@ const ProjectTasks = ({ user }) => {
     const openComments = (task) => setActiveCommentsTask(task);
     const closeComments = () => setActiveCommentsTask(null);
 
+    const closeSolution = () => setActiveSolutionTask(null);
+
     const handleCommentsRead = (taskId) => {
         setAssignedTasks((prev) => updateUnreadInTree(prev, taskId, 0));
         setTeamsData((prev) => updateUnreadInTree(prev, taskId, 0));
         setActiveCommentsTask((prev) => (prev?.id === taskId ? { ...prev, unreadCommentsCount: 0 } : prev));
+    };
+
+    const handleSolutionSaved = (taskId, solution) => {
+        const updateSolution = (items) => (items || []).map((item) => {
+            const next = { ...item };
+            const currentId = next.id || next.Id;
+
+            if (currentId === taskId) {
+                next.solution = solution;
+                next.Solution = solution;
+            }
+
+            if (next.projects) next.projects = updateSolution(next.projects);
+            if (next.Projects) next.Projects = updateSolution(next.Projects);
+            if (next.projectTasks) next.projectTasks = updateSolution(next.projectTasks);
+            if (next.ProjectTasks) next.ProjectTasks = updateSolution(next.ProjectTasks);
+            if (next.subtasks) next.subtasks = updateSolution(next.subtasks);
+            if (next.Subtasks) next.Subtasks = updateSolution(next.Subtasks);
+
+            return next;
+        });
+
+        setAssignedTasks((prev) => updateSolution(prev));
+        setTeamsData((prev) => updateSolution(prev));
+        setActiveSolutionTask((prev) => (prev?.id === taskId ? { ...prev, solution } : prev));
     };
 
     useEffect(() => {
@@ -232,19 +277,51 @@ const ProjectTasks = ({ user }) => {
 
     const taskMap = useMemo(() => new Map(ownTasks.map((task) => [task.id, task])), [ownTasks]);
 
+    const getLeaderExecutorId = (task) => {
+        const team = teamsData.find((item) => item.id === task.teamId);
+        const executor = team?.executors?.find((item) => item.studentId === user?.id && item.role === 1);
+        return executor?.id || null;
+    };
+
+    const baseTaskTree = useMemo(() => buildTree(ownTasks), [ownTasks]);
+    const parentTaskIds = useMemo(() => collectParentIds(baseTaskTree), [baseTaskTree]);
+
+    useEffect(() => {
+        setCollapsedTasks((prev) => {
+            const next = new Set(prev);
+            parentTaskIds.forEach((id) => next.add(id));
+            return next;
+        });
+    }, [parentTaskIds]);
+
     const taskTree = useMemo(() => {
-        const baseTree = buildTree(ownTasks);
-        if (statusFilter === 'all') return baseTree;
+        const query = normalizeSearch(searchQuery);
+        const matchesSearch = (task) => {
+            if (!query) return true;
+            return [
+                task.name,
+                task.description,
+                task.projectName,
+                task.teamName,
+                formatStatus(task.status)
+            ].some((value) => normalizeSearch(value).includes(query));
+        };
 
         const match = (task) => normalizeStatus(task.status) === statusFilter;
-        const filterAndPromote = (nodes) => nodes.flatMap((node) => {
-            const filteredChildren = filterAndPromote(node.children || []);
-            if (match(node)) return [{ ...node, children: filteredChildren }];
-            return filteredChildren;
+        const matchesStatus = (task) => statusFilter === 'all' || match(task);
+        const filterTree = (nodes) => nodes.flatMap((node) => {
+            const filteredChildren = filterTree(node.children || []);
+            const isMatch = matchesStatus(node) && matchesSearch(node);
+            if (isMatch || filteredChildren.length > 0) {
+                return [{ ...node, children: filteredChildren }];
+            }
+            return [];
         });
 
-        return filterAndPromote(baseTree);
-    }, [ownTasks, statusFilter]);
+        return filterTree(baseTaskTree);
+    }, [baseTaskTree, searchQuery, statusFilter]);
+
+    const visibleTaskCount = useMemo(() => countTreeNodes(taskTree), [taskTree]);
 
     const ganttTasks = useMemo(() => {
         return ownTasks
@@ -334,7 +411,7 @@ const ProjectTasks = ({ user }) => {
 
     const renderBranch = (task, level = 0) => {
         const hasChildren = task.children?.length > 0;
-        const isCollapsed = collapsedTasks.has(task.id);
+        const isCollapsed = !searchQuery.trim() && collapsedTasks.has(task.id);
         const executors = task.executors || [];
         const unreadCommentsCount = task.unreadCommentsCount || 0;
 
@@ -425,6 +502,13 @@ const ProjectTasks = ({ user }) => {
                                 <span className="comments-toggle__badge">{unreadCommentsCount}</span>
                             )}
                         </button>
+                        <button
+                            className="comments-toggle"
+                            onClick={() => setActiveSolutionTask(task)}
+                            aria-label="Открыть решение"
+                        >
+                            <span>{task.solution ? 'Решение' : 'Добавить решение'}</span>
+                        </button>
                     </div>
                 </div>
 
@@ -475,8 +559,19 @@ const ProjectTasks = ({ user }) => {
                         </select>
                     </div>
 
+                    <div className="tasks-toolbar__item tasks-toolbar__search">
+                        <span className="filter-label">Поиск</span>
+                        <input
+                            className="task-search-input"
+                            type="search"
+                            value={searchQuery}
+                            onChange={(event) => setSearchQuery(event.target.value)}
+                            placeholder="Название, проект, команда"
+                        />
+                    </div>
+
                     <div className="tasks-toolbar__summary">
-                        <span>{ownTasks.length} задач в видимости</span>
+                        <span>{visibleTaskCount === ownTasks.length ? ownTasks.length : `${visibleTaskCount} / ${ownTasks.length}`} задач в видимости</span>
                         <span>{ownTasks.filter((task) => normalizeStatus(task.status) === 'InProgress').length} активных</span>
                         <span>{ownTasks.reduce((sum, task) => sum + (task.unreadCommentsCount || 0), 0)} новых комментариев</span>
                     </div>
@@ -496,6 +591,16 @@ const ProjectTasks = ({ user }) => {
                         currentUser={user}
                         onClose={closeComments}
                         onCommentsRead={handleCommentsRead}
+                    />
+                )}
+
+                {activeSolutionTask && (
+                    <TaskSolutionModal
+                        task={activeSolutionTask}
+                        actorExecutorId={getLeaderExecutorId(activeSolutionTask)}
+                        canEdit={Boolean(getLeaderExecutorId(activeSolutionTask))}
+                        onClose={closeSolution}
+                        onSaved={(solution) => handleSolutionSaved(activeSolutionTask.id, solution)}
                     />
                 )}
             </div>

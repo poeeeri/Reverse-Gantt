@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.appName }}-config
+  labels:
+    app: {{ .Values.appName }}
+data:
+  ASPNETCORE_ENVIRONMENT: {{ if eq .Release.Namespace "prod" }} "Production"{{ else if eq .Release.Namespace "qa" }} "Staging"{{ else }} "Development"{{ end }}
+  ASPNETCORE_URLS: "http://+:{{ .Values.containerPort }}"
+  Jwt__Issuer: {{ .Values.jwt.issuer | quote }}
+  Jwt__Audience: {{ .Values.jwt.audience | quote }}
+  Jwt__LifetimeMinutes: {{ .Values.jwt.lifetimeMinutes | quote }}
+  Email__SmtpHost: {{ .Values.email.smtpHost | quote }}
+  Email__SmtpPort: {{ .Values.email.smtpPort | quote }}
+  Email__EnableSsl: {{ .Values.email.enableSsl | quote }}
+  Email__SmtpUsername: {{ .Values.email.smtpUsername | quote }}
+  Email__FromEmail: {{ .Values.email.fromEmail | quote }}
+  Email__FromName: {{ .Values.email.fromName | quote }}
+  Email__ConfirmationBaseUrl: {{ .Values.email.confirmationBaseUrl | quote }}
+  TelegramBot__AdminChatId: {{ .Values.telegramBot.adminChatId | quote }}
+{{- range $index, $origin := .Values.cors.origins }}
+  Cors__Origins__{{ $index }}: {{ $origin | quote }}
+{{- end }}

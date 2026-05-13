@@ -1,0 +1,11 @@
+appName: reverse-gantt-api-dev
+replicaCount: 1
+
+service:
+  type: NodePort
+  port: 80
+  nodePort: 30080
+
+cors:
+  origins:
+    - http://localhost:5173

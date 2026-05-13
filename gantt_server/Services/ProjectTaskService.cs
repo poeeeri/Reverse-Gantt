@@ -21,7 +21,9 @@ namespace gantt_server.Services
                 .Include(t => t.Executors).ThenInclude(e => e.Student)
                 .Include(t => t.Comments).ThenInclude(c => c.Student)
                 .Include(t => t.Comments).ThenInclude(c => c.Attachments)
-                .Include(t => t.Comments).ThenInclude(c => c.Reads);
+                .Include(t => t.Comments).ThenInclude(c => c.Reads)
+                .Include(t => t.Solution).ThenInclude(s => s!.Attachments)
+                .Include(t => t.Solution).ThenInclude(s => s!.UpdatedByExecutor).ThenInclude(e => e.Student);
 
         public async Task<IReadOnlyList<ProjectTaskDto>> GetByProjectAsync(Guid projectId, CancellationToken ct)
         {
@@ -343,6 +345,76 @@ namespace gantt_server.Services
             return true;
         }
 
+        public async Task<TaskSolutionDto?> GetSolutionAsync(Guid taskId, CancellationToken ct)
+        {
+            var taskExists = await _db.ProjectTasks.AnyAsync(t => t.Id == taskId, ct);
+            if (!taskExists) return null;
+
+            var solution = await _db.TaskSolutions
+                .Include(s => s.Attachments)
+                .Include(s => s.UpdatedByExecutor).ThenInclude(e => e.Student)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.TaskId == taskId, ct);
+
+            return solution?.ToDto();
+        }
+
+        public async Task<TaskSolutionDto?> UpsertSolutionAsync(Guid taskId, TaskSolutionUpsertDto dto, CancellationToken ct)
+        {
+            var task = await _db.ProjectTasks
+                .Include(t => t.Solution).ThenInclude(s => s!.Attachments)
+                .FirstOrDefaultAsync(t => t.Id == taskId, ct);
+
+            if (task is null) return null;
+
+            var actor = await _db.Executors.AsNoTracking().FirstOrDefaultAsync(e => e.Id == dto.ActorExecutorId, ct);
+            if (actor is null || actor.TeamId != task.TeamId || actor.Role != ExecutorRole.Leader)
+                throw new InvalidOperationException("Редактировать решение может только лидер команды");
+
+            ValidateSolutionPayload(dto.Explanation, dto.AttachmentDataUrls);
+
+            var now = DateTime.UtcNow;
+            var solution = task.Solution;
+
+            if (solution is null)
+            {
+                solution = new TaskSolution
+                {
+                    TaskId = taskId,
+                    Explanation = dto.Explanation?.Trim() ?? string.Empty,
+                    UpdatedByExecutorId = dto.ActorExecutorId,
+                    CreatedAt = now,
+                    UpdatedAt = now
+                };
+
+                _db.TaskSolutions.Add(solution);
+                await _db.SaveChangesAsync(ct);
+            }
+            else
+            {
+                solution.Explanation = dto.Explanation?.Trim() ?? string.Empty;
+                solution.UpdatedByExecutorId = dto.ActorExecutorId;
+                solution.UpdatedAt = now;
+
+                if (solution.Attachments.Count > 0)
+                    _db.TaskSolutionAttachments.RemoveRange(solution.Attachments);
+            }
+
+            var attachments = CreateSolutionAttachments(solution.Id, dto.AttachmentDataUrls);
+            if (attachments.Count > 0)
+                _db.TaskSolutionAttachments.AddRange(attachments);
+
+            await _db.SaveChangesAsync(ct);
+
+            var updated = await _db.TaskSolutions
+                .Include(s => s.Attachments)
+                .Include(s => s.UpdatedByExecutor).ThenInclude(e => e.Student)
+                .AsNoTracking()
+                .FirstAsync(s => s.Id == solution.Id, ct);
+
+            return updated.ToDto();
+        }
+
         private async Task<Project> EnsureProjectExists(Guid projectId, CancellationToken ct)
         {
             var project = await _db.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId, ct);
@@ -457,6 +529,15 @@ namespace gantt_server.Services
                 throw new InvalidOperationException("Добавьте текст комментария или хотя бы одно фото");
         }
 
+        private static void ValidateSolutionPayload(string? explanation, IEnumerable<string>? attachmentDataUrls)
+        {
+            var hasExplanation = !string.IsNullOrWhiteSpace(explanation);
+            var hasAttachments = attachmentDataUrls?.Any(v => !string.IsNullOrWhiteSpace(v)) == true;
+
+            if (!hasExplanation && !hasAttachments)
+                throw new InvalidOperationException("Добавьте пояснение или хотя бы одно изображение решения");
+        }
+
         private static List<TaskCommentAttachment> CreateAttachments(Guid commentId, IEnumerable<string>? attachmentDataUrls)
         {
             var attachments = new List<TaskCommentAttachment>();
@@ -476,6 +557,33 @@ namespace gantt_server.Services
                 attachments.Add(new TaskCommentAttachment
                 {
                     CommentId = commentId,
+                    ImageDataUrl = imageDataUrl,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
+            return attachments;
+        }
+
+        private static List<TaskSolutionAttachment> CreateSolutionAttachments(Guid solutionId, IEnumerable<string>? attachmentDataUrls)
+        {
+            var attachments = new List<TaskSolutionAttachment>();
+            if (attachmentDataUrls is null)
+                return attachments;
+
+            foreach (var imageDataUrl in attachmentDataUrls
+                .Where(v => !string.IsNullOrWhiteSpace(v))
+                .Select(v => v.Trim()))
+            {
+                if (!imageDataUrl.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException("Можно прикреплять только изображения");
+
+                if (imageDataUrl.Length > 7_000_000)
+                    throw new InvalidOperationException("Изображение слишком большое");
+
+                attachments.Add(new TaskSolutionAttachment
+                {
+                    SolutionId = solutionId,
                     ImageDataUrl = imageDataUrl,
                     CreatedAt = DateTime.UtcNow
                 });

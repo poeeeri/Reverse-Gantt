@@ -134,5 +134,26 @@ namespace gantt_server.Controllers
             var ok = await _projectTaskService.DeleteCommentAsync(taskId, commentId, ct);
             return ok ? NoContent() : NotFound();
         }
+
+        [HttpGet("tasks/{id:guid}/solution")]
+        public async Task<ActionResult<TaskSolutionDto?>> GetSolution(Guid id, CancellationToken ct)
+        {
+            var solution = await _projectTaskService.GetSolutionAsync(id, ct);
+            return Ok(solution);
+        }
+
+        [HttpPut("tasks/{id:guid}/solution")]
+        public async Task<ActionResult<TaskSolutionDto>> UpsertSolution(Guid id, [FromBody] TaskSolutionUpsertDto dto, CancellationToken ct)
+        {
+            try
+            {
+                var solution = await _projectTaskService.UpsertSolutionAsync(id, dto, ct);
+                return solution is null ? NotFound() : Ok(solution);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
     }
 }
